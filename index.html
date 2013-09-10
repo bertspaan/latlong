@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-	<title>Buildings in the Netherlands by year of construction</title>
+	<title>Latitude/longitude of a point</title>
 	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 	<link rel="stylesheet" href="style.css" />
 	<link rel="stylesheet" href="leaflet.css" />
@@ -11,15 +11,58 @@
 <body>
 	<div id="map"></div>
   <div id="box">
-    <div> 
-      <div id="info">
+    <div id="pad"> 
+      <div id="box-info">
         <h2>Info</h2>
-        <p></p>    
+        <p>Latitude/longitude of a point or a selection rectangle.</p>
+        <p>
+          <div>
+            <label for="tile-url">Tiles:</label>
+            <input id="tile-url" placeholder="Custom tile URL template">
+            <button id="set-tile-url">Set</button>
+          <div>
+        </p>
+      </div>
+      <div id="box-map">
+        <h2>Map</h2>
+        <h3>Center</h3>
+        <table class="data-table" id="map-geostrings">
+          <tr><td class="key"><img src="images/latlon.png" /></td><td class="value cntr-latlon"></td></tr>
+          <tr><td class="key">WKT</td><td class="value cntr-wkt"></td></tr>
+          <tr><td class="key"><img src="images/postgres.png" /></td><td class="value cntr-postgis"></td></tr>
+          <tr><td class="key"><img src="images/geojson.png" /></td><td class="value cntr-geojson"></td></tr>
+        </table>
+        <h3>Bounding box</h3>
+        <table class="data-table" id="map-geostrings">
+          <tr><td class="key"><img src="images/latlon.png" /></td><td class="value bb-latlon"></td></tr>
+          <tr><td class="key">WKT</td><td class="value bb-wkt"></td></tr>
+          <tr><td class="key"><img src="images/postgres.png" /></td><td class="value bb-postgis"></td></tr>
+          <tr><td class="key"><img src="images/geojson.png" /></td><td class="value bb-geojson"></td></tr>
+        </table>
+      </div>
+      <!-- <div id="box-selection">
+        <h2>Selection</h2>
+        <p>Ctrl-click to draw rectangle</p>
+        <h3>Center</h3>
+        <table class="data-table" id="selection-geostrings">
+          <tr><td class="key">s:</td><td class="value cntr-latlon"></td></tr>
+          <tr><td class="key">s:</td><td class="value cntr-wkt"></td></tr>
+          <tr><td class="key">s:</td><td class="value cntr-postgis"></td></tr>
+          <tr><td class="key">s:</td><td class="value cntr-geojson"></td></tr>
+        </table>
+        <h3>Bounding box</h3>
+        <table class="data-table" id="selection-geostrings">
+          <tr><td class="key">s:</td><td class="value bb-latlon"></td></tr>
+          <tr><td class="key">s:</td><td class="value bb-wkt"></td></tr>
+          <tr><td class="key">s:</td><td class="value bb-postgis"></td></tr>
+          <tr><td class="key">s:</td><td class="value bb-geojson"></td></tr>
+        </table>        
+      </div> -->
     </div>
-  <div>
+  </div>
   
 	<script>
-    var radius = 100;
+    var precision = 4;
     
     disableHashChange = false;
     
@@ -28,7 +71,7 @@
     //var tileUrl = "http://tiles.citysdk.waag.org/v2/bag/{z}/{x}/{y}.png";
     var tileUrl = "http://otile2.mqcdn.com/tiles/1.0.0/osm/{z}/{x}/{y}.png";
 
-		L.tileLayer(tileUrl, {
+		var tileLayer = L.tileLayer(tileUrl, {
       attributionControl: false,
 			minZoom: 2
 		}).addTo(map);
@@ -36,35 +79,120 @@
     map.setView([52.3674, 4.915], 6);
     
     map.on('moveend', function(e) {
+      printGeoStrings();
+      
       var lat = roundLatLon(map.getCenter().lat);
       var lon = roundLatLon(map.getCenter().lng);
       var zoom = map.getZoom();
-            
+          
       disableHashChange = true;      
-      window.location.hash = [lat, lon, zoom].join(",");
+       var newHash = "map=" + [zoom, lat, lon].join("/");
+      if ($("#tile-url").val()) {
+        newHash += "&tiles=" + encodeURIComponent($("#tile-url").val());
+      }
+      window.location.hash = newHash;      
     });
     
-    $("#close").on("click", function() {
-        $("#box").fadeToggle();
-        $("#close").toggleClass("closed");
+    $("#set-tile-url").on("click", function(event){
+      if ($("#tile-url").val()) {
+        tileLayer.setUrl($("#tile-url").val());
+      } else {
+        tileLayer.setUrl(decodeURIComponent(tileUrl));
+      }
     });
+    
+    function printGeoStrings() {
+      var bounds = map.getBounds();
+      var cntr = map.getCenter();   
+      
+      var geoStrings = {
+        cntr: latLonToString(cntr),
+        bb: rectToString(bounds.getNorthWest(), bounds.getSouthEast())
+      };
+      
+      $("#map-geostrings .cntr-latlon").html(geoStrings.cntr.latlon);
+      $("#map-geostrings .cntr-wkt").html(geoStrings.cntr.wkt);
+      $("#map-geostrings .cntr-postgis").html(geoStrings.cntr.postgis);
+      $("#map-geostrings .cntr-geojson").html(geoStrings.cntr.geojson);
+
+      $("#map-geostrings .bb-latlon").html(geoStrings.bb.latlon);
+      $("#map-geostrings .bb-wkt").html(geoStrings.bb.wkt);
+      $("#map-geostrings .bb-postgis").html(geoStrings.bb.postgis);
+      $("#map-geostrings .bb-geojson").html(geoStrings.bb.geojson);
+      
+    }  
+    
+    function latLonToString(ll) {
+      var lat = ll.lat.toFixed(precision);
+      var lon = ll.lng.toFixed(precision);
+      return {
+        latlon: lat + "," + lon,
+        wkt: "POINT(" + lon + " " + lat + ")",
+        postgis: "ST_SetSRID(ST_MakePoint(" + lon + ", " + lat + "), 4326)",
+        geojson: "{\"type\":\"Point\",\"coordinates\":[" + lon + "," + lat + "]}"
+      }
+    }
+ 
+    function rectToString(nw, se) {
+      var nwLat = nw.lat.toFixed(precision);
+      var nwLon = nw.lng.toFixed(precision);
+      var seLat = se.lat.toFixed(precision);
+      var seLon = se.lng.toFixed(precision);
+      return {
+        latlon: nwLat + "," + nwLon + "," + seLat + "," + seLon,
+        wkt: "POLYGON((" + 
+            nwLon + " " + nwLat + "," + 
+            seLon + " " + nwLat + "," + 
+            seLon + " " + seLat + "," + 
+            nwLon + " " + seLat + "," + 
+            nwLon + " " + nwLat + 
+          "))",
+        postgis: "ST_SetSRID(ST_MakeBox2D(ST_Point(" + nwLon + ", " + nwLat + "), ST_Point(" + seLon + ", " + seLat + ")), 4326)",
+        geojson: "{\"type\":\"Polygon\",\"coordinates\":[[[" + 
+            nwLon + "," + nwLat + "],[" + 
+            seLon + "," + nwLat + "],[" + 
+            seLon + "," + seLat + "],[" + 
+            nwLon + "," + seLat + "],[" + 
+            nwLon + "," + nwLat + 
+          "]]]}"
+      };
+    }
         
     window.onhashchange = function() {
       if (!disableHashChange) {
-        var hash = window.location.hash.split(",");;
-        if (hash.length == 3) {
-          var lat = parseFloat(hash[0].substring(1)); // Remove "#"
-          var lon = parseFloat(hash[1]);
-          var zoom = parseInt(hash[2]);
+        var hash = {};
+        if (window.location.hash.length > 1) {
+          var hashes = window.location.hash.substring(1).split("&"); // Remove "#"
+          for (var i = 0; i < hashes.length; i++) {
+            if (hashes[i].indexOf("=") != -1) {
+              var kv = hashes[i].split("=");
+              hash[kv[0]] = kv[1]; 
+            }
+          }
+        }   
+
+        if (hash.map && hash.map.split("/").length == 3) {
+          var hashMap = hash.map.split("/");
+          
+          var zoom = parseInt(hashMap[0]);
+          var lat = parseFloat(hashMap[1]);
+          var lon = parseFloat(hashMap[2]);
         
-          map.setView([lat, lon], zoom);
-        
+          map.setView([lat, lon], zoom);        
         }
+        
+        if (hash.tiles) {
+          var newTileUrl = decodeURIComponent(hash.tiles);
+          $("#tile-url").val(newTileUrl);
+          tileLayer.setUrl(newTileUrl);
+        }
+          
       }
       disableHashChange = false;
     }
     
-    window.onhashchange();    
+    window.onhashchange(); 
+    printGeoStrings();  
     
     function roundLatLon(l) {
       return Math.round(l * 10000) / 10000;

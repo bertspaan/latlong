@@ -1,19 +1,20 @@
 body {
 	padding: 0;
   margin: 0;
-  
   overflow: hidden;
 }
 
-html, body, #map {
-	height: 100%;
-  background-color: black;  
+html, body {
   font-family: "Helvetica Neue", Helvetica, Arial, freesans, sans-serif;  
   font-size: 12px;
 }
 
 #map {
   cursor: pointer;
+  right: 380px;
+  left: 0;
+  height: 100%;
+  position: absolute;
 }
 
 html, body, #map,
@@ -22,28 +23,30 @@ a, a:visited, a:hover {
 }
 
 #box {
-  background-color: rgba(255, 255, 255, 0.95);
-    
-  border-width: 2px;
-  border-style: solid;
-  border-color: rgba(255, 255, 255, 0.8);
-  
-  border-radius: 9px;
-  
-  padding: 10px;
-  
-  width: 230px;
+  background-color: white;
 
-  top: 20px;  
-  right: 20px;
-  
-/*  bottom: 20px;  
-  max-height: 710px;*/
+  height: 100%;
+  width: 380px;
+  right: 0;  
+  top: 0;
+  bottom: 0;  
   
   position: absolute;
   
   overflow-y: auto;
   overflow-x: hidden;
+  
+  border-left-style: solid;
+  border-left-width: 2px;
+  border-left-color: rgba(0,0,0,0.3);
+}
+
+input {
+  width: 283px;
+}
+
+#box #pad {
+  padding: 0px 10px;
 }
 
 p {
@@ -75,8 +78,7 @@ p:last-child {
 }
 
 h3 {
-  margin: 0px 0;
-  text-align: right;
+  margin: 0 0;
 }
 
 #box h2:before,
@@ -101,21 +103,34 @@ h3 {
   text-align: center;
 }
 
-#waag img {
-  margin-top: 15px;
-  margin-bottom: 0px;
-  margin-left: auto;
-  margin-right: auto;
-  display: block;  
+table {
+  table-layout: fixed;
+  width: 100%;
+  font-family: Consolas, 'Liberation Mono', Courier, monospace;
 }
 
-#legend table tr td {
-  align: left;
-  text-align: left;
+td {  
+  vertical-align: middle;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
+
+td:first-child {
+  width: 20px;
+}
+
+.leaflet-control-attribution {
+  display: none;
+}
+
+/*
 
 td {
-  white-space: nowrap
+  white-space: nowrap;
+  display: block;
+  width: 100px;
+  position: relative;
 }
 
 .data-table tr td {
@@ -125,6 +140,7 @@ td {
 
 .data-table {
   border-collapse: collapse;
+  table-layout:fixed;
 }
 
 .data-table tr td.key {
@@ -141,22 +157,4 @@ td {
 
 .key {
   text-align: right;
-}
-
-#legend table tr td.key {
-  width: 20px;
-  border-style: solid;
-  border-width: 1px ;
-}
-
-#legend table tr td.value {
-  padding-left: 8px;
-}
-
-#legend table tr td.value.first {
-  padding-right: 15px;
-}
-
-.leaflet-control-attribution {
-  display: none;
-}
+}*/
