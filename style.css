@@ -1,0 +1,162 @@
+body {
+	padding: 0;
+  margin: 0;
+  
+  overflow: hidden;
+}
+
+html, body, #map {
+	height: 100%;
+  background-color: black;  
+  font-family: "Helvetica Neue", Helvetica, Arial, freesans, sans-serif;  
+  font-size: 12px;
+}
+
+#map {
+  cursor: pointer;
+}
+
+html, body, #map,
+a, a:visited, a:hover {
+  color: rgb(68, 68, 68);
+}
+
+#box {
+  background-color: rgba(255, 255, 255, 0.95);
+    
+  border-width: 2px;
+  border-style: solid;
+  border-color: rgba(255, 255, 255, 0.8);
+  
+  border-radius: 9px;
+  
+  padding: 10px;
+  
+  width: 230px;
+
+  top: 20px;  
+  right: 20px;
+  
+/*  bottom: 20px;  
+  max-height: 710px;*/
+  
+  position: absolute;
+  
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+p {
+  margin-top: 0;
+  margin-bottom: 1em;
+}
+
+p:last-child {
+  margin-bottom: 0;
+}
+
+#box h2 {
+  font-size: 24px;
+  font-family: "Palatino Linotype", "Book Antiqua", Palatino, serif;  
+  font-style: italic;
+  margin-top: 10px;
+  margin-bottom: 10px;
+}
+
+#box #info h2 {
+  margin-top: 0;
+}
+
+.help {
+  padding-left: 10px;
+  color: #999;
+  font-size: 90%;
+  font-weight:normal;
+}
+
+h3 {
+  margin: 0px 0;
+  text-align: right;
+}
+
+#box h2:before,
+#box h2:after {
+  position:relative;
+  top: -4px;
+}
+
+#box h2:before {
+  content:url('images/tilde_left.png');
+  left: -4px;
+}
+
+#box h2:after {
+  content:url('images/tilde_right.png');
+  left: 4px;
+}
+
+#box h2 {
+  margin-left: auto;
+  margin-right: auto;
+  text-align: center;
+}
+
+#waag img {
+  margin-top: 15px;
+  margin-bottom: 0px;
+  margin-left: auto;
+  margin-right: auto;
+  display: block;  
+}
+
+#legend table tr td {
+  align: left;
+  text-align: left;
+}
+
+td {
+  white-space: nowrap
+}
+
+.data-table tr td {
+  height: 1.4em;
+  line-height: 1.4em;
+}
+
+.data-table {
+  border-collapse: collapse;
+}
+
+.data-table tr td.key {
+}
+
+.data-table tr td.value {
+  width: 99%;
+  text-align: left;
+  padding-left: 10px;
+  
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.key {
+  text-align: right;
+}
+
+#legend table tr td.key {
+  width: 20px;
+  border-style: solid;
+  border-width: 1px ;
+}
+
+#legend table tr td.value {
+  padding-left: 8px;
+}
+
+#legend table tr td.value.first {
+  padding-right: 15px;
+}
+
+.leaflet-control-attribution {
+  display: none;
+}

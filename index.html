@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Buildings in the Netherlands by year of construction</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+	<link rel="stylesheet" href="style.css" />
+	<link rel="stylesheet" href="leaflet.css" />
+	<script src="jquery-2.0.3.min.js"></script>
+	<script src="leaflet.js"></script>
+</head>
+<body>
+	<div id="map"></div>
+  <div id="box">
+    <div> 
+      <div id="info">
+        <h2>Info</h2>
+        <p></p>    
+    </div>
+  <div>
+  
+	<script>
+    var radius = 100;
+    
+    disableHashChange = false;
+    
+		var map = L.map('map');
+    
+    //var tileUrl = "http://tiles.citysdk.waag.org/v2/bag/{z}/{x}/{y}.png";
+    var tileUrl = "http://otile2.mqcdn.com/tiles/1.0.0/osm/{z}/{x}/{y}.png";
+
+		L.tileLayer(tileUrl, {
+      attributionControl: false,
+			minZoom: 2
+		}).addTo(map);
+
+    map.setView([52.3674, 4.915], 6);
+    
+    map.on('moveend', function(e) {
+      var lat = roundLatLon(map.getCenter().lat);
+      var lon = roundLatLon(map.getCenter().lng);
+      var zoom = map.getZoom();
+            
+      disableHashChange = true;      
+      window.location.hash = [lat, lon, zoom].join(",");
+    });
+    
+    $("#close").on("click", function() {
+        $("#box").fadeToggle();
+        $("#close").toggleClass("closed");
+    });
+        
+    window.onhashchange = function() {
+      if (!disableHashChange) {
+        var hash = window.location.hash.split(",");;
+        if (hash.length == 3) {
+          var lat = parseFloat(hash[0].substring(1)); // Remove "#"
+          var lon = parseFloat(hash[1]);
+          var zoom = parseInt(hash[2]);
+        
+          map.setView([lat, lon], zoom);
+        
+        }
+      }
+      disableHashChange = false;
+    }
+    
+    window.onhashchange();    
+    
+    function roundLatLon(l) {
+      return Math.round(l * 10000) / 10000;
+    }
+    
+	</script>
+</body>
+</html>
