@@ -5,8 +5,10 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 	<link rel="stylesheet" href="style.css" />
 	<link rel="stylesheet" href="leaflet.css" />
+  <link rel="stylesheet" href="leaflet.draw.css" />
 	<script src="jquery-2.0.3.min.js"></script>
 	<script src="leaflet.js"></script>
+  <script src="leaflet.draw.js"></script>
 </head>
 <body>
 	<div id="map"></div>
@@ -14,7 +16,7 @@
     <div id="pad"> 
       <div id="box-info">
         <h2>Info</h2>
-        <p>Latitude/longitude of a point or a selection rectangle.</p>
+        <p>Latitude/longitude of a point or a selection rectangle. Use the edit controls to create a selection rectangle.</p>
         <p>
           <div>
             <label for="tile-url">Tiles:</label>
@@ -26,38 +28,37 @@
       <div id="box-map">
         <h2>Map</h2>
         <h3>Center</h3>
-        <table class="data-table" id="map-geostrings">
+        <table class="data-table map-geostrings">
           <tr><td class="key"><img src="images/latlon.png" /></td><td class="value cntr-latlon"></td></tr>
           <tr><td class="key">WKT</td><td class="value cntr-wkt"></td></tr>
           <tr><td class="key"><img src="images/postgres.png" /></td><td class="value cntr-postgis"></td></tr>
           <tr><td class="key"><img src="images/geojson.png" /></td><td class="value cntr-geojson"></td></tr>
         </table>
         <h3>Bounding box</h3>
-        <table class="data-table" id="map-geostrings">
+        <table class="data-table map-geostrings">
           <tr><td class="key"><img src="images/latlon.png" /></td><td class="value bb-latlon"></td></tr>
           <tr><td class="key">WKT</td><td class="value bb-wkt"></td></tr>
           <tr><td class="key"><img src="images/postgres.png" /></td><td class="value bb-postgis"></td></tr>
           <tr><td class="key"><img src="images/geojson.png" /></td><td class="value bb-geojson"></td></tr>
         </table>
       </div>
-      <!-- <div id="box-selection">
+      <div id="box-selection">
         <h2>Selection</h2>
-        <p>Ctrl-click to draw rectangle</p>
         <h3>Center</h3>
-        <table class="data-table" id="selection-geostrings">
-          <tr><td class="key">s:</td><td class="value cntr-latlon"></td></tr>
-          <tr><td class="key">s:</td><td class="value cntr-wkt"></td></tr>
-          <tr><td class="key">s:</td><td class="value cntr-postgis"></td></tr>
-          <tr><td class="key">s:</td><td class="value cntr-geojson"></td></tr>
+        <table class="data-table rectangle-geostrings">
+          <tr><td class="key"><img src="images/latlon.png" /></td><td class="value cntr-latlon"></td></tr>
+          <tr><td class="key">WKT</td><td class="value cntr-wkt"></td></tr>
+          <tr><td class="key"><img src="images/postgres.png" /></td><td class="value cntr-postgis"></td></tr>
+          <tr><td class="key"><img src="images/geojson.png" /></td><td class="value cntr-geojson"></td></tr>
         </table>
         <h3>Bounding box</h3>
-        <table class="data-table" id="selection-geostrings">
-          <tr><td class="key">s:</td><td class="value bb-latlon"></td></tr>
-          <tr><td class="key">s:</td><td class="value bb-wkt"></td></tr>
-          <tr><td class="key">s:</td><td class="value bb-postgis"></td></tr>
-          <tr><td class="key">s:</td><td class="value bb-geojson"></td></tr>
+        <table class="data-table rectangle-geostrings">
+          <tr><td class="key"><img src="images/latlon.png" /></td><td class="value bb-latlon"></td></tr>
+          <tr><td class="key">WKT</td><td class="value bb-wkt"></td></tr>
+          <tr><td class="key"><img src="images/postgres.png" /></td><td class="value bb-postgis"></td></tr>
+          <tr><td class="key"><img src="images/geojson.png" /></td><td class="value bb-geojson"></td></tr>
         </table>        
-      </div> -->
+      </div>
     </div>
   </div>
   
@@ -67,6 +68,7 @@
     disableHashChange = false;
     
 		var map = L.map('map');
+    var rectangle;
     
     //var tileUrl = "http://tiles.citysdk.waag.org/v2/bag/{z}/{x}/{y}.png";
     var tileUrl = "http://otile2.mqcdn.com/tiles/1.0.0/osm/{z}/{x}/{y}.png";
@@ -75,6 +77,50 @@
       attributionControl: false,
 			minZoom: 2
 		}).addTo(map);
+
+    var drawnItems = new L.FeatureGroup().addTo(map);
+
+    var drawControl = new L.Control.Draw({
+        draw: {
+    		  position: 'topleft',
+          polyline: false,
+    			polygon: false,
+          rectangle: true,
+          circle: false,
+          marker: false          
+    		},    	
+    	  edit: {
+    		  featureGroup: drawnItems
+    	  }
+      });
+    
+    map.addControl(drawControl);
+
+    map.on('draw:created', function (e) {
+    	var type = e.layerType,
+          layer = e.layer;
+    	if (type === 'rectangle') {
+        rectangle = layer;
+        drawnItems.addLayer(layer);	
+    	}    	
+      printGeoStrings();
+    });
+  
+    map.on('draw:drawstart', function (e) {
+      rectangle = null;
+      drawnItems.clearLayers()	;
+    });
+    
+    map.on('draw:drawstop', function (e) {
+      printGeoStrings();
+    });
+
+
+      // var rectangle = L.rectangle([[51.49, 4.1], [51.48, 5.06]]);
+  // 
+  //     rectangle.editing.enable();
+  //     map.addLayer(rectangle);
+  //     
 
     map.setView([52.3674, 4.915], 6);
     
@@ -110,15 +156,45 @@
         bb: rectToString(bounds.getNorthWest(), bounds.getSouthEast())
       };
       
-      $("#map-geostrings .cntr-latlon").html(geoStrings.cntr.latlon);
-      $("#map-geostrings .cntr-wkt").html(geoStrings.cntr.wkt);
-      $("#map-geostrings .cntr-postgis").html(geoStrings.cntr.postgis);
-      $("#map-geostrings .cntr-geojson").html(geoStrings.cntr.geojson);
+      $(".map-geostrings .cntr-latlon").html(geoStrings.cntr.latlon);
+      $(".map-geostrings .cntr-wkt").html(geoStrings.cntr.wkt);
+      $(".map-geostrings .cntr-postgis").html(geoStrings.cntr.postgis);
+      $(".map-geostrings .cntr-geojson").html(geoStrings.cntr.geojson);
 
-      $("#map-geostrings .bb-latlon").html(geoStrings.bb.latlon);
-      $("#map-geostrings .bb-wkt").html(geoStrings.bb.wkt);
-      $("#map-geostrings .bb-postgis").html(geoStrings.bb.postgis);
-      $("#map-geostrings .bb-geojson").html(geoStrings.bb.geojson);
+      $(".map-geostrings .bb-latlon").html(geoStrings.bb.latlon);
+      $(".map-geostrings .bb-wkt").html(geoStrings.bb.wkt);
+      $(".map-geostrings .bb-postgis").html(geoStrings.bb.postgis);
+      $(".map-geostrings .bb-geojson").html(geoStrings.bb.geojson);
+      
+      if (rectangle) {
+        var bounds = rectangle.getLatLngs();
+        
+        
+        
+        var geoStrings = {
+          cntr: latLonToString(bounds[0]),
+          bb: rectToString(bounds[0], bounds[1])
+        };
+      
+        $(".rectangle-geostrings .cntr-latlon").html(geoStrings.cntr.latlon);
+        $(".rectangle-geostrings .cntr-wkt").html(geoStrings.cntr.wkt);
+        $(".rectangle-geostrings .cntr-postgis").html(geoStrings.cntr.postgis);
+        $(".rectangle-geostrings .cntr-geojson").html(geoStrings.cntr.geojson);
+
+        $(".rectangle-geostrings .bb-latlon").html(geoStrings.bb.latlon);
+        $(".rectangle-geostrings .bb-wkt").html(geoStrings.bb.wkt);
+        $(".rectangle-geostrings .bb-postgis").html(geoStrings.bb.postgis);
+        $(".rectangle-geostrings .bb-geojson").html(geoStrings.bb.geojson);
+        
+      }
+      
+      // var rectangle = L.rectangle([[51.49, 4.1], [51.48, 5.06]]);
+  // 
+  //     rectangle.editing.enable();
+  //     map.addLayer(rectangle);
+  //     
+      
+      
       
     }  
     
