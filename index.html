@@ -113,14 +113,7 @@
     
     map.on('draw:drawstop', function (e) {
       printGeoStrings();
-    });
-
-
-      // var rectangle = L.rectangle([[51.49, 4.1], [51.48, 5.06]]);
-  // 
-  //     rectangle.editing.enable();
-  //     map.addLayer(rectangle);
-  //     
+    });  
 
     map.setView([52.3674, 4.915], 6);
     
@@ -168,9 +161,7 @@
       
       if (rectangle) {
         var bounds = rectangle.getLatLngs();
-        
-        
-        
+              
         var geoStrings = {
           cntr: latLonToString(bounds[0]),
           bb: rectToString(bounds[0], bounds[1])
@@ -186,15 +177,7 @@
         $(".rectangle-geostrings .bb-postgis").html(geoStrings.bb.postgis);
         $(".rectangle-geostrings .bb-geojson").html(geoStrings.bb.geojson);
         
-      }
-      
-      // var rectangle = L.rectangle([[51.49, 4.1], [51.48, 5.06]]);
-  // 
-  //     rectangle.editing.enable();
-  //     map.addLayer(rectangle);
-  //     
-      
-      
+      }      
       
     }  
     
