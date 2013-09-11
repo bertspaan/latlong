@@ -7,6 +7,7 @@
 	<link rel="stylesheet" href="leaflet.css" />
   <link rel="stylesheet" href="leaflet.draw.css" />
 	<script src="jquery-2.0.3.min.js"></script>
+	<script src="d3.v3.min.js"></script>
 	<script src="leaflet.js"></script>
   <script src="leaflet.draw.js"></script>
 </head>
@@ -27,37 +28,11 @@
       </div>
       <div id="box-map">
         <h2>Map</h2>
-        <h3>Center</h3>
-        <table class="data-table map-geostrings">
-          <tr><td class="key"><img src="images/latlon.png" /></td><td class="value cntr-latlon"></td></tr>
-          <tr><td class="key">WKT</td><td class="value cntr-wkt"></td></tr>
-          <tr><td class="key"><img src="images/postgres.png" /></td><td class="value cntr-postgis"></td></tr>
-          <tr><td class="key"><img src="images/geojson.png" /></td><td class="value cntr-geojson"></td></tr>
-        </table>
-        <h3>Bounding box</h3>
-        <table class="data-table map-geostrings">
-          <tr><td class="key"><img src="images/latlon.png" /></td><td class="value bb-latlon"></td></tr>
-          <tr><td class="key">WKT</td><td class="value bb-wkt"></td></tr>
-          <tr><td class="key"><img src="images/postgres.png" /></td><td class="value bb-postgis"></td></tr>
-          <tr><td class="key"><img src="images/geojson.png" /></td><td class="value bb-geojson"></td></tr>
-        </table>
+        <div id="geostrings-map"></div>
       </div>
-      <div id="box-selection">
+      <div id="box-rectangle">
         <h2>Selection</h2>
-        <h3>Center</h3>
-        <table class="data-table rectangle-geostrings">
-          <tr><td class="key"><img src="images/latlon.png" /></td><td class="value cntr-latlon"></td></tr>
-          <tr><td class="key">WKT</td><td class="value cntr-wkt"></td></tr>
-          <tr><td class="key"><img src="images/postgres.png" /></td><td class="value cntr-postgis"></td></tr>
-          <tr><td class="key"><img src="images/geojson.png" /></td><td class="value cntr-geojson"></td></tr>
-        </table>
-        <h3>Bounding box</h3>
-        <table class="data-table rectangle-geostrings">
-          <tr><td class="key"><img src="images/latlon.png" /></td><td class="value bb-latlon"></td></tr>
-          <tr><td class="key">WKT</td><td class="value bb-wkt"></td></tr>
-          <tr><td class="key"><img src="images/postgres.png" /></td><td class="value bb-postgis"></td></tr>
-          <tr><td class="key"><img src="images/geojson.png" /></td><td class="value bb-geojson"></td></tr>
-        </table>        
+        <div id="geostrings-rectangle"></div>
       </div>
     </div>
   </div>
@@ -95,15 +70,45 @@
       });
     
     map.addControl(drawControl);
+    
+    var crosshairLength = 10;
+    var crosshair = [
+      [0, -1], [1, 0], [0, 1], [-1, 0]
+    ];
+    var g = d3.select(".leaflet-control-container")
+      .append("div")
+        .attr("class", "leaflet-middle")
+      .append("svg")
+        .attr("class", "crosshair")
+        .attr("width", 64)
+        .attr("height", 64)
+      .append("svg:g")
+        .attr("transform", "translate(32,32)")
+        .selectAll('line')
+        .data(crosshair)
+      
+    g.enter().append('line')
+            .attr("class", "crosshair-outline")
+        .attr("x1", function(d) { return d[0] * crosshairLength; } )
+        .attr("y1", function(d) { return d[1] * crosshairLength; } )
+        .attr("x2", function(d) { return d[0] * crosshairLength * 2; } )
+        .attr("y2", function(d) { return d[1] * crosshairLength * 2; } )
+        
+    g.enter().append('line')
+        .attr("x1", function(d) { return d[0] * crosshairLength; } )
+        .attr("y1", function(d) { return d[1] * crosshairLength; } )
+        .attr("x2", function(d) { return d[0] * crosshairLength * 2; } )
+        .attr("y2", function(d) { return d[1] * crosshairLength * 2; } )
+   
 
     map.on('draw:created', function (e) {
     	var type = e.layerType,
           layer = e.layer;
     	if (type === 'rectangle') {
         rectangle = layer;
-        drawnItems.addLayer(layer);	
+        drawnItems.addLayer(rectangle);	
     	}    	
-      printGeoStrings();
+      updateAllGeoStrings();
     });
   
     map.on('draw:drawstart', function (e) {
@@ -112,18 +117,19 @@
     });
     
     map.on('draw:drawstop', function (e) {
-      printGeoStrings();
+      updateAllGeoStrings();
     });  
 
     map.setView([52.3674, 4.915], 6);
     
     map.on('moveend', function(e) {
-      printGeoStrings();
+      updateAllGeoStrings();
       
       var lat = roundLatLon(map.getCenter().lat);
       var lon = roundLatLon(map.getCenter().lng);
       var zoom = map.getZoom();
           
+      // TODO: Zorg dat dit goed gaat!
       disableHashChange = true;      
        var newHash = "map=" + [zoom, lat, lon].join("/");
       if ($("#tile-url").val()) {
@@ -140,56 +146,73 @@
       }
     });
     
-    function printGeoStrings() {
+    function updateGeoStrings(id, geoStrings) {
+      var strings = {
+        cntr: "Center",
+        bb: "Bounding box"
+      };
+      
+      var div = d3.select("#geostrings-" + id).selectAll("div")
+          .data(geoStrings)
+        .enter().append("div");
+          
+      div.append("h3")
+          .html(function(d) { return strings[d.type]; })
+        
+      var tr = div.append("table")
+          .attr("class", "data-table")
+          .selectAll("tr")
+          .data(function(d) {            
+            return d.strings;             
+          })
+        .enter().append("tr");
+      
+      tr.append("td")
+          .attr("class", "key")
+        .append("img")
+          .attr("src", function(d) { 
+            return "images/" + d.type + ".png"; 
+          });
+  
+      tr.append("td")
+          .attr("class", "value")
+          .html(function(d) { return d.string; }); 
+      
+    }
+    
+    function updateAllGeoStrings() {
       var bounds = map.getBounds();
       var cntr = map.getCenter();   
       
-      var geoStrings = {
-        cntr: latLonToString(cntr),
-        bb: rectToString(bounds.getNorthWest(), bounds.getSouthEast())
-      };
+      var geoStrings = [
+        {type: "cntr", strings: latLonToString(cntr)},
+        {type: "bb", strings: rectToString(bounds.getNorthWest(), bounds.getSouthEast())}
+      ];
       
-      $(".map-geostrings .cntr-latlon").html(geoStrings.cntr.latlon);
-      $(".map-geostrings .cntr-wkt").html(geoStrings.cntr.wkt);
-      $(".map-geostrings .cntr-postgis").html(geoStrings.cntr.postgis);
-      $(".map-geostrings .cntr-geojson").html(geoStrings.cntr.geojson);
-
-      $(".map-geostrings .bb-latlon").html(geoStrings.bb.latlon);
-      $(".map-geostrings .bb-wkt").html(geoStrings.bb.wkt);
-      $(".map-geostrings .bb-postgis").html(geoStrings.bb.postgis);
-      $(".map-geostrings .bb-geojson").html(geoStrings.bb.geojson);
+      updateGeoStrings('map', geoStrings);
       
       if (rectangle) {
         var bounds = rectangle.getLatLngs();
-              
-        var geoStrings = {
-          cntr: latLonToString(bounds[0]),
-          bb: rectToString(bounds[0], bounds[1])
-        };
-      
-        $(".rectangle-geostrings .cntr-latlon").html(geoStrings.cntr.latlon);
-        $(".rectangle-geostrings .cntr-wkt").html(geoStrings.cntr.wkt);
-        $(".rectangle-geostrings .cntr-postgis").html(geoStrings.cntr.postgis);
-        $(".rectangle-geostrings .cntr-geojson").html(geoStrings.cntr.geojson);
-
-        $(".rectangle-geostrings .bb-latlon").html(geoStrings.bb.latlon);
-        $(".rectangle-geostrings .bb-wkt").html(geoStrings.bb.wkt);
-        $(".rectangle-geostrings .bb-postgis").html(geoStrings.bb.postgis);
-        $(".rectangle-geostrings .bb-geojson").html(geoStrings.bb.geojson);
         
-      }      
+        //L.LatLngBounds()
+        //updateGeoStrings('rectangle', geoStrings);
+        var geoStrings = [
+          {type: "cntr", strings: latLonToString(bounds.getCenter())},
+          {type: "bb", strings: rectToString(bounds[0], bounds[2])}
+        ];  
+      } 
       
-    }  
-    
+    } 
+ 
     function latLonToString(ll) {
       var lat = ll.lat.toFixed(precision);
       var lon = ll.lng.toFixed(precision);
-      return {
-        latlon: lat + "," + lon,
-        wkt: "POINT(" + lon + " " + lat + ")",
-        postgis: "ST_SetSRID(ST_MakePoint(" + lon + ", " + lat + "), 4326)",
-        geojson: "{\"type\":\"Point\",\"coordinates\":[" + lon + "," + lat + "]}"
-      }
+      return [
+        {type: "latlon", string: lat + "," + lon},
+        {type: "wkt", string: "POINT(" + lon + " " + lat + ")"},
+        {type: "postgis", string: "ST_SetSRID(ST_MakePoint(" + lon + ", " + lat + "), 4326)"},
+        {type: "geojson", string: "{\"type\":\"Point\",\"coordinates\":[" + lon + "," + lat + "]}"}
+      ]
     }
  
     function rectToString(nw, se) {
@@ -197,61 +220,61 @@
       var nwLon = nw.lng.toFixed(precision);
       var seLat = se.lat.toFixed(precision);
       var seLon = se.lng.toFixed(precision);
-      return {
-        latlon: nwLat + "," + nwLon + "," + seLat + "," + seLon,
-        wkt: "POLYGON((" + 
+      return [
+        {type: "latlon", string: nwLat + "," + nwLon + "," + seLat + "," + seLon},
+        {type: "wkt", string: "POLYGON((" + 
             nwLon + " " + nwLat + "," + 
             seLon + " " + nwLat + "," + 
             seLon + " " + seLat + "," + 
             nwLon + " " + seLat + "," + 
             nwLon + " " + nwLat + 
-          "))",
-        postgis: "ST_SetSRID(ST_MakeBox2D(ST_Point(" + nwLon + ", " + nwLat + "), ST_Point(" + seLon + ", " + seLat + ")), 4326)",
-        geojson: "{\"type\":\"Polygon\",\"coordinates\":[[[" + 
+          "))"},
+        {type: "postgis", string: "ST_SetSRID(ST_MakeBox2D(ST_Point(" + nwLon + ", " + nwLat + "), ST_Point(" + seLon + ", " + seLat + ")), 4326)"},
+        {type: "geojson", string: "{\"type\":\"Polygon\",\"coordinates\":[[[" + 
             nwLon + "," + nwLat + "],[" + 
             seLon + "," + nwLat + "],[" + 
             seLon + "," + seLat + "],[" + 
             nwLon + "," + seLat + "],[" + 
             nwLon + "," + nwLat + 
-          "]]]}"
-      };
+          "]]]}"}
+      ];
     }
         
     window.onhashchange = function() {
-      if (!disableHashChange) {
-        var hash = {};
-        if (window.location.hash.length > 1) {
-          var hashes = window.location.hash.substring(1).split("&"); // Remove "#"
-          for (var i = 0; i < hashes.length; i++) {
-            if (hashes[i].indexOf("=") != -1) {
-              var kv = hashes[i].split("=");
-              hash[kv[0]] = kv[1]; 
-            }
-          }
-        }   
-
-        if (hash.map && hash.map.split("/").length == 3) {
-          var hashMap = hash.map.split("/");
-          
-          var zoom = parseInt(hashMap[0]);
-          var lat = parseFloat(hashMap[1]);
-          var lon = parseFloat(hashMap[2]);
-        
-          map.setView([lat, lon], zoom);        
-        }
-        
-        if (hash.tiles) {
-          var newTileUrl = decodeURIComponent(hash.tiles);
-          $("#tile-url").val(newTileUrl);
-          tileLayer.setUrl(newTileUrl);
-        }
-          
-      }
-      disableHashChange = false;
+      // if (!disableHashChange) {
+      //   var hash = {};
+      //   if (window.location.hash.length > 1) {
+      //     var hashes = window.location.hash.substring(1).split("&"); // Remove "#"
+      //     for (var i = 0; i < hashes.length; i++) {
+      //       if (hashes[i].indexOf("=") != -1) {
+      //         var kv = hashes[i].split("=");
+      //         hash[kv[0]] = kv[1]; 
+      //       }
+      //     }
+      //   }   
+      // 
+      //   if (hash.map && hash.map.split("/").length == 3) {
+      //     var hashMap = hash.map.split("/");
+      //     
+      //     var zoom = parseInt(hashMap[0]);
+      //     var lat = parseFloat(hashMap[1]);
+      //     var lon = parseFloat(hashMap[2]);
+      //   
+      //     map.setView([lat, lon], zoom);        
+      //   }
+      //   
+      //   if (hash.tiles) {
+      //     var newTileUrl = decodeURIComponent(hash.tiles);
+      //     $("#tile-url").val(newTileUrl);
+      //     tileLayer.setUrl(newTileUrl);
+      //   }
+      //     
+      // }
+      // disableHashChange = false;
     }
     
     window.onhashchange(); 
-    printGeoStrings();  
+    updateAllGeoStrings();  
     
     function roundLatLon(l) {
       return Math.round(l * 10000) / 10000;
