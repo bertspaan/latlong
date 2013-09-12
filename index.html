@@ -40,7 +40,7 @@
 	<script>
     var precision = 4;
     
-    disableHashChange = false;
+    hashChangeEnabled = true;
     
 		var map = L.map('map');
     var rectangle;
@@ -60,7 +60,9 @@
     		  position: 'topleft',
           polyline: false,
     			polygon: false,
-          rectangle: true,
+          rectangle: {
+            repeatMode: false
+          },
           circle: false,
           marker: false          
     		},    	
@@ -111,31 +113,54 @@
       updateAllGeoStrings();
     });
   
-    map.on('draw:drawstart', function (e) {
+    $(".leaflet-draw-draw-rectangle").on("click", function(e) {
       rectangle = null;
-      drawnItems.clearLayers()	;
+      drawnItems.clearLayers();      
+    })
+    
+    // map.on('draw:drawstart', function (e) {
+    //   rectangle = null;
+    //   drawnItems.clearLayers()  ;
+    // });
+    
+    map.on('draw:editstop', function (e) {
+      updateAllGeoStrings();
     });
     
-    map.on('draw:drawstop', function (e) {
-      updateAllGeoStrings();
-    });  
+
 
     map.setView([52.3674, 4.915], 6);
     
-    map.on('moveend', function(e) {
+    map.on('move', function(e) {
+      hashChangeEnabled = false;
+      
       updateAllGeoStrings();
       
       var lat = roundLatLon(map.getCenter().lat);
       var lon = roundLatLon(map.getCenter().lng);
       var zoom = map.getZoom();
           
-      // TODO: Zorg dat dit goed gaat!
-      disableHashChange = true;      
        var newHash = "map=" + [zoom, lat, lon].join("/");
       if ($("#tile-url").val()) {
         newHash += "&tiles=" + encodeURIComponent($("#tile-url").val());
       }
       window.location.hash = newHash;      
+    });
+    
+    map.on('movestart', function(e) {
+      hashChangeEnabled = false;
+    });
+    
+    map.on('zoomstart', function(e) {
+      hashChangeEnabled = false;
+    });
+    
+    map.on('moveend', function(e) {
+      hashChangeEnabled = true;
+    });
+    
+    map.on('zoomend', function(e) {
+      hashChangeEnabled = true;
     });
     
     $("#set-tile-url").on("click", function(event){
@@ -151,21 +176,23 @@
         cntr: "Center",
         bb: "Bounding box"
       };
-      
-      var div = d3.select("#geostrings-" + id).selectAll("div")
-          .data(geoStrings)
-        .enter().append("div");
+     
+      var divs = d3.select("#geostrings-" + id).selectAll("div")
+          .data(geoStrings);
           
+      var div = divs.enter().append("div")
+      
       div.append("h3")
           .html(function(d) { return strings[d.type]; })
         
-      var tr = div.append("table")
+      var trs = div.append("table")
           .attr("class", "data-table")
           .selectAll("tr")
           .data(function(d) {            
             return d.strings;             
-          })
-        .enter().append("tr");
+          });  
+      
+      var tr = trs.enter().append("tr");
       
       tr.append("td")
           .attr("class", "key")
@@ -173,16 +200,37 @@
           .attr("src", function(d) { 
             return "images/" + d.type + ".png"; 
           });
-  
+        
       tr.append("td")
-          .attr("class", "value")
-          .html(function(d) { return d.string; }); 
+          .attr("class", "value");
+          
+      // Update
+          
+      divs.select("table")
+          .selectAll("tr")
+          .data(function(d) { return d.strings; })
+          .select("td.value")
+          .html(function(d) { return d.string; });      
+               
+      // Exit
+      var hond = divs.exit();
+      hond.remove();
+          
+      trs.exit().remove();
       
+      
+
+               
     }
     
     function updateAllGeoStrings() {
-      var bounds = map.getBounds();
-      var cntr = map.getCenter();   
+      updateMapGeoStrings();
+      updateRectangleGeoStrings();
+    }
+    
+    function updateMapGeoStrings() {
+      var bounds = map.getBounds(),
+          cntr = map.getCenter();   
       
       var geoStrings = [
         {type: "cntr", strings: latLonToString(cntr)},
@@ -190,18 +238,22 @@
       ];
       
       updateGeoStrings('map', geoStrings);
+    }
       
+    function updateRectangleGeoStrings() {
+      var geoStrings = [];
       if (rectangle) {
-        var bounds = rectangle.getLatLngs();
-        
-        //L.LatLngBounds()
-        //updateGeoStrings('rectangle', geoStrings);
-        var geoStrings = [
+        var latLngs = rectangle.getLatLngs(),
+            southWest = new L.LatLng(latLngs[0].lat, latLngs[0].lng),
+            northEast = new L.LatLng(latLngs[2].lat, latLngs[2].lng),
+            bounds = new L.LatLngBounds(southWest, northEast);
+
+        geoStrings = [
           {type: "cntr", strings: latLonToString(bounds.getCenter())},
-          {type: "bb", strings: rectToString(bounds[0], bounds[2])}
-        ];  
-      } 
-      
+          {type: "bb", strings: rectToString(bounds.getNorthWest(), bounds.getSouthEast())}
+        ];   
+      }
+      updateGeoStrings('rectangle', geoStrings);      
     } 
  
     function latLonToString(ll) {
@@ -241,36 +293,36 @@
     }
         
     window.onhashchange = function() {
-      // if (!disableHashChange) {
-      //   var hash = {};
-      //   if (window.location.hash.length > 1) {
-      //     var hashes = window.location.hash.substring(1).split("&"); // Remove "#"
-      //     for (var i = 0; i < hashes.length; i++) {
-      //       if (hashes[i].indexOf("=") != -1) {
-      //         var kv = hashes[i].split("=");
-      //         hash[kv[0]] = kv[1]; 
-      //       }
-      //     }
-      //   }   
-      // 
-      //   if (hash.map && hash.map.split("/").length == 3) {
-      //     var hashMap = hash.map.split("/");
-      //     
-      //     var zoom = parseInt(hashMap[0]);
-      //     var lat = parseFloat(hashMap[1]);
-      //     var lon = parseFloat(hashMap[2]);
-      //   
-      //     map.setView([lat, lon], zoom);        
-      //   }
-      //   
-      //   if (hash.tiles) {
-      //     var newTileUrl = decodeURIComponent(hash.tiles);
-      //     $("#tile-url").val(newTileUrl);
-      //     tileLayer.setUrl(newTileUrl);
-      //   }
-      //     
-      // }
-      // disableHashChange = false;
+      if (hashChangeEnabled) {
+        var hash = {};
+        if (window.location.hash.length > 1) {
+          var hashes = window.location.hash.substring(1).split("&"); // Remove "#"
+          for (var i = 0; i < hashes.length; i++) {
+            if (hashes[i].indexOf("=") != -1) {
+              var kv = hashes[i].split("=");
+              hash[kv[0]] = kv[1]; 
+            }
+          }
+        }   
+      
+        if (hash.map && hash.map.split("/").length == 3) {
+          var hashMap = hash.map.split("/");
+          
+          var zoom = parseInt(hashMap[0]);
+          var lat = parseFloat(hashMap[1]);
+          var lon = parseFloat(hashMap[2]);
+        
+          map.setView([lat, lon], zoom);        
+        }
+        
+        if (hash.tiles) {
+          var newTileUrl = decodeURIComponent(hash.tiles);
+          $("#tile-url").val(newTileUrl);
+          tileLayer.setUrl(newTileUrl);
+        }
+          
+      }
+      hashChangeEnabled = true;
     }
     
     window.onhashchange(); 
