@@ -28,6 +28,18 @@ a, a:visited, a:hover {
   position: absolute;
 }
 
+.leaflet-middle {
+  width: 64px;
+  height: 64px;
+  position: absolute;
+  top:0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  margin: auto;  
+  z-index: 1000;
+}
+
 .crosshair {
   stroke: rgba(0, 0, 0, 0.8);
   stroke-width: 3;
