@@ -1,0 +1,61 @@
+{
+  "point": [
+    {
+      "name": "latlong",
+      "title": "latitude, longitude",
+      "template": "%lat%, %lon%"
+    },
+    {
+      "name": "wkt",
+      "title": "WKT",
+      "template": "POINT(%lon% %lat%)"
+    },
+    {
+      "name": "postgis",
+      "title": "PostGIS",
+      "template": "ST_SetSRID(ST_MakePoint(%lon%, %lat%), 4326)",
+    },
+    {
+      "name": "geojson",
+      "title": "GeoJSON",
+      "template": "{\"type\":\"Point\",\"coordinates\":[%lon%,%lat%]}"
+    },
+    {
+      "name": "citysdk",
+      "title": "CitySDK",
+      "template": "&lat=%lat%&lon=%lon%"
+    }
+  ], 
+  "rect": [
+    {
+      "name": "latlong",
+      "title": "latitude, longitude",
+      "template": "%latnw%, %lonnw%, %latse%, %lonse%"
+    },
+    {
+      "name": "wkt",
+      "title": "WKT",
+      "template": "POLYGON((%lonnw% %latnw%, %lonse% %latnw%, %lonse% %latse%, %lonnw% %latse%, %lonnw% %latnw%))"
+    },
+    {
+      "name": "postgis",
+      "title": "PostGIS",
+      "template": "ST_SetSRID(ST_MakeBox2D(ST_Point(%lonnw%, %latnw%), ST_Point(%lonse%, %latse%)), 4326)",
+    },
+    {
+      "name": "geojson",
+      "title": "GeoJSON",
+      "template": "{\"type\":\"Polygon\",\"coordinates\":[[[%lonnw%, %latnw%],[%lonse%, %latnw%],[%lonse%, %latse%],[%lonnw%, %latse%],[%lonnw%, %latnw%]]]}"
+    },
+    {
+      "name": "citysdk",
+      "title": "CitySDK",
+      "template": ""
+    },
+    {
+      "name": "tilemill",
+      "title": "TileMill",
+      "template": ""
+    }  
+  ]
+}

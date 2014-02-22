@@ -4,48 +4,20 @@
 	<title>Latitude/longitude of a point</title>
 	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 	<link rel="stylesheet" href="style.css" />
-	<link rel="stylesheet" href="leaflet.css" />
-  <link rel="stylesheet" href="leaflet.draw.css" />
-	<script src="jquery-2.0.3.min.js"></script>
 	<script src="d3.v3.min.js"></script>
-	<script src="leaflet.js"></script>
-  <script src="leaflet.draw.js"></script>
+  <link href='http://fonts.googleapis.com/css?family=Inconsolata:400,700' rel='stylesheet' type='text/css'>
+  <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7.2/leaflet.css" />
+  <script src="http://cdn.leafletjs.com/leaflet-0.7.2/leaflet.js"></script>
+  <script src="leaflet-hash.js"></script>
 </head>
 <body>
 	<div id="map"></div>
-  <div id="box">
-    <div id="pad"> 
-      <div id="box-info">
-        <h2>Info</h2>
-        <p>Latitude/longitude of a point or a selection rectangle. Use the edit controls to create a selection rectangle.</p>
-        <p>
-          <div>
-            <label for="tile-url">Tiles:</label>
-            <input id="tile-url" placeholder="Custom tile URL template">
-            <button id="set-tile-url">Set</button>
-          <div>
-        </p>
-      </div>
-      <div id="box-map">
-        <h2>Map</h2>
-        <div id="geostrings-map"></div>
-      </div>
-      <div id="box-rectangle">
-        <h2>Selection</h2>
-        <div id="geostrings-rectangle"></div>
-      </div>
-    </div>
-  </div>
-  
+  <div id="latlong" class="leaflet-bar">    
+  </div>  
 	<script>
-    var precision = 4;
-    
-    hashChangeEnabled = true;
-    
 		var map = L.map('map');
-    var rectangle;
+    var hash = new L.Hash(map);
     
-    //var tileUrl = "http://tiles.citysdk.waag.org/v2/bag/{z}/{x}/{y}.png";
     var tileUrl = "http://otile2.mqcdn.com/tiles/1.0.0/osm/{z}/{x}/{y}.png";
 
 		var tileLayer = L.tileLayer(tileUrl, {
@@ -53,285 +25,54 @@
 			minZoom: 2
 		}).addTo(map);
 
-    var drawnItems = new L.FeatureGroup().addTo(map);
-
-    var drawControl = new L.Control.Draw({
-        draw: {
-    		  position: 'topleft',
-          polyline: false,
-    			polygon: false,
-          rectangle: {
-            repeatMode: false
-          },
-          circle: false,
-          marker: false          
-    		},    	
-    	  edit: {
-    		  featureGroup: drawnItems
-    	  }
-      });
-    
-    map.addControl(drawControl);
-    
-    var crosshairLength = 10;
-    var crosshair = [
-      [0, -1], [1, 0], [0, 1], [-1, 0]
-    ];
-    var g = d3.select(".leaflet-control-container")
-      .append("div")
-        .attr("class", "leaflet-middle")
-      .append("svg")
-        .attr("class", "crosshair")
-        .attr("width", 64)
-        .attr("height", 64)
-      .append("svg:g")
-        .attr("transform", "translate(32,32)")
-        .selectAll('line')
-        .data(crosshair)
-      
-    g.enter().append('line')
-            .attr("class", "crosshair-outline")
-        .attr("x1", function(d) { return d[0] * crosshairLength; } )
-        .attr("y1", function(d) { return d[1] * crosshairLength; } )
-        .attr("x2", function(d) { return d[0] * crosshairLength * 2; } )
-        .attr("y2", function(d) { return d[1] * crosshairLength * 2; } )
-        
-    g.enter().append('line')
-        .attr("x1", function(d) { return d[0] * crosshairLength; } )
-        .attr("y1", function(d) { return d[1] * crosshairLength; } )
-        .attr("x2", function(d) { return d[0] * crosshairLength * 2; } )
-        .attr("y2", function(d) { return d[1] * crosshairLength * 2; } )
-   
-
-    map.on('draw:created', function (e) {
-    	var type = e.layerType,
-          layer = e.layer;
-    	if (type === 'rectangle') {
-        rectangle = layer;
-        drawnItems.addLayer(rectangle);	
-    	}    	
-      updateAllGeoStrings();
-    });
-  
-    $(".leaflet-draw-draw-rectangle").on("click", function(e) {
-      rectangle = null;
-      drawnItems.clearLayers();      
-    })
-    
-    // map.on('draw:drawstart', function (e) {
-    //   rectangle = null;
-    //   drawnItems.clearLayers()  ;
-    // });
-    
-    map.on('draw:editstop', function (e) {
-      updateAllGeoStrings();
-    });
-    
-
+    drawCrossHair();
 
     map.setView([52.3674, 4.915], 6);
     
-    map.on('move', function(e) {
-      hashChangeEnabled = false;
-      
-      updateAllGeoStrings();
-      
-      var lat = roundLatLon(map.getCenter().lat);
-      var lon = roundLatLon(map.getCenter().lng);
-      var zoom = map.getZoom();
-          
-       var newHash = "map=" + [zoom, lat, lon].join("/");
-      if ($("#tile-url").val()) {
-        newHash += "&tiles=" + encodeURIComponent($("#tile-url").val());
-      }
-      window.location.hash = newHash;      
-    });
+    map.on('move', function() {      
+  		updateGeoStrings();
+    });    
     
-    map.on('movestart', function(e) {
-      hashChangeEnabled = false;
-    });
-    
-    map.on('zoomstart', function(e) {
-      hashChangeEnabled = false;
-    });
-    
-    map.on('moveend', function(e) {
-      hashChangeEnabled = true;
-    });
-    
-    map.on('zoomend', function(e) {
-      hashChangeEnabled = true;
-    });
-    
-    $("#set-tile-url").on("click", function(event){
-      if ($("#tile-url").val()) {
-        tileLayer.setUrl($("#tile-url").val());
-      } else {
-        tileLayer.setUrl(decodeURIComponent(tileUrl));
-      }
-    });
-    
-    function updateGeoStrings(id, geoStrings) {
-      var strings = {
-        cntr: "Center",
-        bb: "Bounding box"
-      };
-     
-      var divs = d3.select("#geostrings-" + id).selectAll("div")
-          .data(geoStrings);
-          
-      var div = divs.enter().append("div")
-      
-      div.append("h3")
-          .html(function(d) { return strings[d.type]; })
-        
-      var trs = div.append("table")
-          .attr("class", "data-table")
-          .selectAll("tr")
-          .data(function(d) {            
-            return d.strings;             
-          });  
-      
-      var tr = trs.enter().append("tr");
-      
-      tr.append("td")
-          .attr("class", "key")
-        .append("img")
-          .attr("src", function(d) { 
-            return "images/" + d.type + ".png"; 
-          });
-        
-      tr.append("td")
-          .attr("class", "value");
-          
-      // Update
-          
-      divs.select("table")
-          .selectAll("tr")
-          .data(function(d) { return d.strings; })
-          .select("td.value")
-          .html(function(d) { return d.string; });      
-               
-      // Exit
-      var hond = divs.exit();
-      hond.remove();
-          
-      trs.exit().remove();
-      
-      
-
-               
-    }
-    
-    function updateAllGeoStrings() {
-      updateMapGeoStrings();
-      updateRectangleGeoStrings();
-    }
-    
-    function updateMapGeoStrings() {
-      var bounds = map.getBounds(),
-          cntr = map.getCenter();   
-      
-      var geoStrings = [
-        {type: "cntr", strings: latLonToString(cntr)},
-        {type: "bb", strings: rectToString(bounds.getNorthWest(), bounds.getSouthEast())}
+    function drawCrossHair() {
+      var crosshairLength = 10;
+      var crosshair = [
+        [0, -1], [1, 0], [0, 1], [-1, 0]
       ];
+      var g = d3.select(".leaflet-control-container")
+        .append("div")
+          .attr("class", "leaflet-middle")
+        .append("svg")
+          .attr("class", "crosshair")
+          .attr("width", 64)
+          .attr("height", 64)
+        .append("svg:g")
+          .attr("transform", "translate(32,32)")
+          .selectAll('line')
+          .data(crosshair);
       
-      updateGeoStrings('map', geoStrings);
-    }
-      
-    function updateRectangleGeoStrings() {
-      var geoStrings = [];
-      if (rectangle) {
-        var latLngs = rectangle.getLatLngs(),
-            southWest = new L.LatLng(latLngs[0].lat, latLngs[0].lng),
-            northEast = new L.LatLng(latLngs[2].lat, latLngs[2].lng),
-            bounds = new L.LatLngBounds(southWest, northEast);
-
-        geoStrings = [
-          {type: "cntr", strings: latLonToString(bounds.getCenter())},
-          {type: "bb", strings: rectToString(bounds.getNorthWest(), bounds.getSouthEast())}
-        ];   
-      }
-      updateGeoStrings('rectangle', geoStrings);      
-    } 
- 
-    function latLonToString(ll) {
-      var lat = ll.lat.toFixed(precision);
-      var lon = ll.lng.toFixed(precision);
-      return [
-        {type: "latlon", string: lat + "," + lon},
-        {type: "wkt", string: "POINT(" + lon + " " + lat + ")"},
-        {type: "postgis", string: "ST_SetSRID(ST_MakePoint(" + lon + ", " + lat + "), 4326)"},
-        {type: "geojson", string: "{\"type\":\"Point\",\"coordinates\":[" + lon + "," + lat + "]}"}
-      ]
-    }
- 
-    function rectToString(nw, se) {
-      var nwLat = nw.lat.toFixed(precision);
-      var nwLon = nw.lng.toFixed(precision);
-      var seLat = se.lat.toFixed(precision);
-      var seLon = se.lng.toFixed(precision);
-      return [
-        {type: "latlon", string: nwLat + "," + nwLon + "," + seLat + "," + seLon},
-        {type: "wkt", string: "POLYGON((" + 
-            nwLon + " " + nwLat + "," + 
-            seLon + " " + nwLat + "," + 
-            seLon + " " + seLat + "," + 
-            nwLon + " " + seLat + "," + 
-            nwLon + " " + nwLat + 
-          "))"},
-        {type: "postgis", string: "ST_SetSRID(ST_MakeBox2D(ST_Point(" + nwLon + ", " + nwLat + "), ST_Point(" + seLon + ", " + seLat + ")), 4326)"},
-        {type: "geojson", string: "{\"type\":\"Polygon\",\"coordinates\":[[[" + 
-            nwLon + "," + nwLat + "],[" + 
-            seLon + "," + nwLat + "],[" + 
-            seLon + "," + seLat + "],[" + 
-            nwLon + "," + seLat + "],[" + 
-            nwLon + "," + nwLat + 
-          "]]]}"}
-      ];
-    }
+      g.enter().append('line')
+              .attr("class", "crosshair-outline")
+          .attr("x1", function(d) { return d[0] * crosshairLength; })
+          .attr("y1", function(d) { return d[1] * crosshairLength; })
+          .attr("x2", function(d) { return d[0] * crosshairLength * 2; })
+          .attr("y2", function(d) { return d[1] * crosshairLength * 2; });
         
-    window.onhashchange = function() {
-      if (hashChangeEnabled) {
-        var hash = {};
-        if (window.location.hash.length > 1) {
-          var hashes = window.location.hash.substring(1).split("&"); // Remove "#"
-          for (var i = 0; i < hashes.length; i++) {
-            if (hashes[i].indexOf("=") != -1) {
-              var kv = hashes[i].split("=");
-              hash[kv[0]] = kv[1]; 
-            }
-          }
-        }   
-      
-        if (hash.map && hash.map.split("/").length == 3) {
-          var hashMap = hash.map.split("/");
-          
-          var zoom = parseInt(hashMap[0]);
-          var lat = parseFloat(hashMap[1]);
-          var lon = parseFloat(hashMap[2]);
-        
-          map.setView([lat, lon], zoom);        
-        }
-        
-        if (hash.tiles) {
-          var newTileUrl = decodeURIComponent(hash.tiles);
-          $("#tile-url").val(newTileUrl);
-          tileLayer.setUrl(newTileUrl);
-        }
-          
-      }
-      hashChangeEnabled = true;
+      g.enter().append('line')
+          .attr("x1", function(d) { return d[0] * crosshairLength; })
+          .attr("y1", function(d) { return d[1] * crosshairLength; })
+          .attr("x2", function(d) { return d[0] * crosshairLength * 2; })
+          .attr("y2", function(d) { return d[1] * crosshairLength * 2; });
+    }
+           
+    function updateLatlong() {
+  		var center = map.getCenter(),
+  		    zoom = map.getZoom(),
+	        precision = Math.max(0, Math.ceil(Math.log(zoom) / Math.LN2));      
+      d3.select('#latlong').html(center.lat.toFixed(precision) + ', ' + center.lng.toFixed(precision));      
     }
     
-    window.onhashchange(); 
-    updateAllGeoStrings();  
-    
-    function roundLatLon(l) {
-      return Math.round(l * 10000) / 10000;
-    }
-    
+    updateLatlong();      
+       
 	</script>
 </body>
 </html>

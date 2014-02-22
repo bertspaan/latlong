@@ -2,15 +2,12 @@ body {
 	padding: 0;
   margin: 0;
   overflow: hidden;
-}
-
-html, body {
-  font-family: "Helvetica Neue", Helvetica, Arial, freesans, sans-serif;  
-  font-size: 12px;
+  font-family: 'Inconsolata', sans-serif;
+  font-size: 33px;
 }
 
 #map {
-  right: 380px;
+  right: 0px;
   left: 0;
   height: 100%;
   position: absolute;
@@ -21,126 +18,14 @@ a, a:visited, a:hover {
   color: rgb(68, 68, 68);
 }
 
-#box {
-  background-color: white;
-
-  height: 100%;
-  width: 380px;
-  right: 0;  
-  top: 0;
-  bottom: 0;  
-  
-  position: absolute;
-  
-  overflow-y: auto;
-  overflow-x: hidden;
-  
-  border-left-style: solid;
-  border-left-width: 2px;
-  border-left-color: rgba(0,0,0,0.3);
-}
-
-input {
-  width: 283px;
-}
-
-#box #pad {
-  padding: 0px 10px;
-}
-
-p {
-  margin-top: 0;
-  margin-bottom: 1em;
-}
-
-p:last-child {
-  margin-bottom: 0;
-}
-
-#box h2 {
-  font-size: 24px;
-  font-family: "Palatino Linotype", "Book Antiqua", Palatino, serif;  
-  font-style: italic;
-  margin-top: 3px;
-  margin-bottom: 3px;
-}
-
-#box #info h2 {
-  margin-top: 0;
-}
-
-.help {
-  padding-left: 10px;
-  color: #999;
-  font-size: 90%;
-  font-weight:normal;
-}
-
-h3 {
-  margin: 0 0;
-}
-
-#box h2:before,
-#box h2:after {
-  position:relative;
-  top: -4px;
-}
-
-#box h2:before {
-  content:url('images/tilde_left.png');
-  left: -4px;
-}
-
-#box h2:after {
-  content:url('images/tilde_right.png');
-  left: 4px;
-}
-
-#box h2 {
-  margin-left: auto;
-  margin-right: auto;
-  text-align: center;
-}
-
-table {
-  table-layout: fixed;
-  width: 100%;
-  font-family: Consolas, 'Liberation Mono', Courier, monospace;
-}
-
-td {  
-  vertical-align: middle;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-td:first-child {
-  width: 30px;
-}
-
-.leaflet-control-attribution {
-  display: none;
-}
-
-.leaflet-middle {
-/*  bottom: 50%;
-  left: 50%;
-  pointer-events: none;
-  position: absolute;*/
-  
-  width: 64px;
-  height: 64px;
-
-
-  position: absolute;
-  top:0;
+#latlong {
+  height: 38px;
+  left: 50px;
+  top: 10px;
   bottom: 0;
-  left: 0;
-  right: 0;
-  margin: auto;
-  
-  z-index: 1000;
+  padding: 8px;
+  background-color: white;
+  position: absolute;
 }
 
 .crosshair {
@@ -155,37 +40,3 @@ td:first-child {
   stroke-linecap: round;
 }
 
-/*
-
-td {
-  white-space: nowrap;
-  display: block;
-  width: 100px;
-  position: relative;
-}
-
-.data-table tr td {
-  height: 1.4em;
-  line-height: 1.4em;
-}
-
-.data-table {
-  border-collapse: collapse;
-  table-layout:fixed;
-}
-
-.data-table tr td.key {
-}
-
-.data-table tr td.value {
-  width: 99%;
-  text-align: left;
-  padding-left: 10px;
-  
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.key {
-  text-align: right;
-}*/
