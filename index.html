@@ -12,7 +12,9 @@
 </head>
 <body>
 	<div id="map"></div>
-  <div id="latlong" class="leaflet-bar">    
+  <div id="bar" class="leaflet-bar">
+    <label for='latlong'>Latitude, longitude</label>
+    <input type="text" id='latlong' name='latlong' />
   </div>  
 	<script>
 		var map = L.map('map');
@@ -31,13 +33,23 @@
     
     map.on('move', function() {      
   		updateLatlong();
-    });    
+    });
+    
+    function textWidth(text) {
+      return text.length * 17.2 + "px";
+    }
+    
+    d3.select('input').on('input', function() {
+      var latlong = d3.select(this).property('value');
+      d3.select(this).style('width', textWidth(latlong));
+    });
     
     function drawCrossHair() {
-      var crosshairLength = 10;
-      var crosshair = [
+      var crosshairLength = 10,
+          crosshair = [
         [0, -1], [1, 0], [0, 1], [-1, 0]
       ];
+      
       var g = d3.select(".leaflet-control-container")
         .append("div")
           .attr("class", "leaflet-middle")
@@ -51,7 +63,7 @@
           .data(crosshair);
       
       g.enter().append('line')
-              .attr("class", "crosshair-outline")
+          .attr("class", "crosshair-outline")
           .attr("x1", function(d) { return d[0] * crosshairLength; })
           .attr("y1", function(d) { return d[1] * crosshairLength; })
           .attr("x2", function(d) { return d[0] * crosshairLength * 2; })
@@ -67,12 +79,16 @@
     function updateLatlong() {
   		var center = map.getCenter(),
   		    zoom = map.getZoom(),
-	        precision = Math.max(0, Math.ceil(Math.log(zoom) / Math.LN2));      
-      d3.select('#latlong').html(center.lat.toFixed(precision) + ', ' + center.lng.toFixed(precision));      
+	        precision = Math.max(0, Math.ceil(Math.log(zoom) / Math.LN2));          
+          
+      var latlong = center.lat.toFixed(precision) + ', ' + center.lng.toFixed(precision);      
+      
+      d3.select('input')
+          .property('value', latlong)
+          .style('width', textWidth(latlong));
     }
     
-    updateLatlong();      
-       
+    updateLatlong();       
 	</script>
 </body>
 </html>

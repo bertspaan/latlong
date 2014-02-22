@@ -2,7 +2,7 @@
   "point": [
     {
       "name": "latlong",
-      "title": "latitude, longitude",
+      "title": "Latitude, longitude",
       "template": "%lat%, %lon%"
     },
     {
