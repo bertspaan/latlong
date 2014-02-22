@@ -17,8 +17,10 @@
     <input type="text" id='latlong' name='latlong' />
   </div>  
 	<script>
-		var map = L.map('map');
-    var hash = new L.Hash(map);
+		var map = L.map('map'),
+        hash = new L.Hash(map),
+        title = "Latitude, longitude",
+        template = "%lat%, %lon%";
     
     var tileUrl = "http://otile2.mqcdn.com/tiles/1.0.0/map/{z}/{x}/{y}.png";
 
@@ -42,6 +44,10 @@
     d3.select('input').on('input', function() {
       var latlong = d3.select(this).property('value');
       d3.select(this).style('width', textWidth(latlong));
+      
+      // 1. kijk of latlong aan template voldoet
+      // 2. kijk of latten en longen binnen resp. [-90, 90] en [-180, 180] vallen
+      // 3. pan!
     });
     
     function drawCrossHair() {
@@ -75,19 +81,24 @@
           .attr("x2", function(d) { return d[0] * crosshairLength * 2; })
           .attr("y2", function(d) { return d[1] * crosshairLength * 2; });
     }
-           
-    function updateLatlong() {
+    
+    function templateToLatlong() {
   		var center = map.getCenter(),
   		    zoom = map.getZoom(),
-	        precision = Math.max(0, Math.ceil(Math.log(zoom) / Math.LN2));          
-          
-      var latlong = center.lat.toFixed(precision) + ', ' + center.lng.toFixed(precision);      
+	        precision = Math.max(0, Math.ceil(Math.log(zoom) / Math.LN2));
       
+      return template 
+          .replace('%lat%', center.lat.toFixed(precision))
+          .replace('%lon%', ((center.lng + 180) % 360 - 180).toFixed(precision));
+    }
+           
+    function updateLatlong() {
+      var latlong = templateToLatlong();
       d3.select('input')
           .property('value', latlong)
           .style('width', textWidth(latlong));
     }
-    
+      
     updateLatlong();       
 	</script>
 </body>
