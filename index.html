@@ -18,9 +18,11 @@
   </div>  
 	<script>
 		var map = L.map('map'),
-        hash = new L.Hash(map),
         title = "Latitude, longitude",
         template = "%lat%, %lon%";
+        
+    map.setView([52.3674, 4.915], 6);
+    var hash = new L.Hash(map);
     
     var tileUrl = "http://otile2.mqcdn.com/tiles/1.0.0/map/{z}/{x}/{y}.png";
 
@@ -30,8 +32,6 @@
 		}).addTo(map);
 
     drawCrossHair();
-
-    map.setView([52.3674, 4.915], 6);
     
     map.on('move', function() {      
   		updateLatlong();
@@ -41,14 +41,44 @@
       return text.length * 17.2 + "px";
     }
     
+    function validateLatLng(latlng) {
+      console.log(latlng);
+      if (latlng && latlng.lat >= -90 && latlng.lat <= 90 && latlng.lng >= -180 && latlng.lng <= 180) {
+        return latlng;
+      } else {
+        return null;
+      }
+    }
+    
     d3.select('input').on('input', function() {
       var latlong = d3.select(this).property('value');
       d3.select(this).style('width', textWidth(latlong));
+      
+      var reNum = "([-+]?[0-9]*\.?[0-9]+)";
+
+      var reTemplate = RegExp.escape(template).replace(/%.*?%/g, reNum);
+     
+      var value = d3.select('input').property('value');
+      var match = value.match(reTemplate);
+      
+      // point, match must have length 3 
+      if (match && match.length == 3) {
+        var latlng = validateLatLng(L.latLng(match[1], match[2]));
+        console.log(latlng);
+      }
+      
+      
+      
       
       // 1. kijk of latlong aan template voldoet
       // 2. kijk of latten en longen binnen resp. [-90, 90] en [-180, 180] vallen
       // 3. pan!
     });
+    
+    // From http://stackoverflow.com/questions/3115150/how-to-escape-regular-expression-special-characters-using-javascript
+    RegExp.escape = function(text) {
+      return text.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, "\\$&");
+    };
     
     function drawCrossHair() {
       var crosshairLength = 10,
