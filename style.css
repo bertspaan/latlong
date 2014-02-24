@@ -42,8 +42,9 @@ input {
   border: none;
 }
 
-label:after {
-  content: ":";
+#bar span:hover {
+  text-decoration: underline;
+  cursor: pointer;
 }
 
 .leaflet-middle {
