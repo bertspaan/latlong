@@ -12,14 +12,15 @@
 </head>
 <body>
 	<div id="map"></div>
-  <div id="bar" class="leaflet-bar">
+  <div id="bar" class="leaflet-bar white">
     <span>Latitude, longitude</span>:
-    <input type="text" id='latlong' name='latlong' />
+    <input type="text" id='latlng' name='latlng' />
   </div>  
 	<script>
 		var map = L.map('map'),
         title = "Latitude, longitude",
-        template = "%lat%, %lon%";
+        template = "%lat%, %lng%",
+        disableTextChange = false;
         
     map.setView([52.3674, 4.915], 6);
     var hash = new L.Hash(map);
@@ -34,45 +35,64 @@
     drawCrossHair();
     
     map.on('move', function() {      
-  		updateLatlong();
+  		updateLatLng();
     });
     
     function textWidth(text) {
       return text.length * 17.2 + "px";
     }
     
-    function validateLatLng(latlng) {
-      console.log(latlng);
-      if (latlng && latlng.lat >= -90 && latlng.lat <= 90 && latlng.lng >= -180 && latlng.lng <= 180) {
-        return latlng;
+    function validateLat(lat) {
+      if (lat >= -90 && lat <= 90) {
+        return lat;
       } else {
         return null;
       }
     }
     
+    function validateLng(lng) {
+      if (lng >= -180 && lng <= 180) {
+        return lng;
+      } else {
+        return null;
+      }
+    }
+    
+    function setError(error) {
+      d3.select('#bar').classed('error', error);
+    }
+    
+    map.on('moveend', function() {
+      disableInputEvent = false;
+    });
+    
     d3.select('input').on('input', function() {
-      var latlong = d3.select(this).property('value');
-      d3.select(this).style('width', textWidth(latlong));
-      
+      var value = d3.select(this).property('value');
+      d3.select(this).style('width', textWidth(value));
+    
       var reNum = "([-+]?[0-9]*\.?[0-9]+)";
-
       var reTemplate = RegExp.escape(template).replace(/%.*?%/g, reNum);
-     
+   
       var value = d3.select('input').property('value');
       var match = value.match(reTemplate);
-      
+    
       // point, match must have length 3 
+      var latlng;
       if (match && match.length == 3) {
-        var latlng = validateLatLng(L.latLng(match[1], match[2]));
-        console.log(latlng);
+        var lat = validateLat(match[1]),
+            lng = validateLng(match[2]);  
+        if (lat && lng) {
+          latlng = L.latLng(lat, lng);
+        }        
       }
-      
-      
-      
-      
-      // 1. kijk of latlong aan template voldoet
-      // 2. kijk of latten en longen binnen resp. [-90, 90] en [-180, 180] vallen
-      // 3. pan!
+    
+      if (latlng && value == template.replace("%lat%", latlng.lat).replace("%lng%", latlng.lng)) {
+        disableTextChange = true;
+        map.panTo(latlng, {animate: false});
+        setError(false);
+      } else {
+        setError(true);
+      }
     });
     
     // From http://stackoverflow.com/questions/3115150/how-to-escape-regular-expression-special-characters-using-javascript
@@ -112,24 +132,28 @@
           .attr("y2", function(d) { return d[1] * crosshairLength * 2; });
     }
     
-    function templateToLatlong() {
+    function templateToLatLng() {
   		var center = map.getCenter(),
   		    zoom = map.getZoom(),
 	        precision = Math.max(0, Math.ceil(Math.log(zoom) / Math.LN2));
       
       return template 
           .replace('%lat%', center.lat.toFixed(precision))
-          .replace('%lon%', ((center.lng + 180) % 360 - 180).toFixed(precision));
+          .replace('%lng%', ((center.lng + 180) % 360 - 180).toFixed(precision));
     }
            
-    function updateLatlong() {
-      var latlong = templateToLatlong();
-      d3.select('input')
-          .property('value', latlong)
-          .style('width', textWidth(latlong));
+    function updateLatLng() {
+      setError(false);
+      if (!disableTextChange) {
+        var latlng = templateToLatLng();
+        d3.select('input')
+            .property('value', latlng)
+            .style('width', textWidth(latlng));
+      }
+      disableTextChange = false;
     }
       
-    updateLatlong();       
+    updateLatLng();       
 	</script>
   <script>
     (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){

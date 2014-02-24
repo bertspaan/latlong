@@ -34,12 +34,20 @@ a, a:visited, a:hover {
   top: 10px;
   bottom: 0;
   padding: 8px;
-  background-color: white;
   position: absolute;
+}
+
+.white {
+  background-color: white;
+}
+
+.error {
+  background-color: #f59090;
 }
 
 input {
   border: none;
+  background-color: transparent;
 }
 
 #bar span:hover {
