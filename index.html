@@ -58,13 +58,17 @@
           .data(json.point)
           .enter()
         .append('li')
-          .attr('class', 'template')
+          .classed('template', true)
+          .classed('hidden', function(d, i) { return i == 0; })
           .html(function(d) { return d.title; })
           .on('click', function(d) {
             d3.select('#templates').classed('hidden', true);
             t = d;
             d3.select('#main-bar span').html(t.title);
             updateLatLng();            
+            
+            d3.selectAll('#templates li').classed('hidden', false);
+            d3.select(this).classed('hidden', true);
           });
     });
     
