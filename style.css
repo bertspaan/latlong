@@ -28,17 +28,57 @@ a, a:visited, a:hover {
   color: rgb(68, 68, 68);
 }
 
-#bar {
-  height: 38px;
-  left: 50px;
-  top: 10px;
-  bottom: 0;
+.bar {  
   padding: 8px;
   position: absolute;
+  left: 50px;
+  background-color: white;
+  
+  border-radius: 4px;
+  
+	-webkit-filter: drop-shadow(0 1px 5px rgba(0,0,0,.5));
+	-moz-filter: drop-shadow(0 1px 5px rgba(0,0,0,.5));
+	-ms-filter: drop-shadow(0 1px 5px rgba(0,0,0,.5));
+	-o-filter: drop-shadow(0 1px 5px rgba(0,0,0,.5));
+	filter: drop-shadow(0 1px 5px rgba(0,0,0,.5));
 }
 
-.white {
-  background-color: white;
+#main-bar {
+  height: 38px;
+  top: 10px;
+  bottom: 0;
+}
+
+#main-bar span {
+  font-weight: 700;
+}
+
+#templates {
+  top: 85px;
+}
+
+#templates:after {
+	content: "";
+	position: absolute;
+	left: 32px;
+	top: 0;
+	margin: -15px 0 0;
+	border-bottom: 15px solid #fff;
+	border-left: 15px solid transparent;
+	border-right: 15px solid transparent;
+}
+
+ul {
+  margin-left: 20px;
+  line-height: 1.4em;
+}
+
+li {
+
+}
+
+.hidden {
+  display: none;
 }
 
 .error {
@@ -50,7 +90,7 @@ input {
   background-color: transparent;
 }
 
-#bar span:hover {
+.template:hover {
   text-decoration: underline;
   cursor: pointer;
 }
@@ -78,4 +118,3 @@ input {
   stroke-width: 6;
   stroke-linecap: round;
 }
-
