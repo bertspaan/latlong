@@ -28,7 +28,7 @@ a, a:visited, a:hover {
   color: rgb(68, 68, 68);
 }
 
-.bar {  
+.bar { 
   padding: 8px;
   position: absolute;
   left: 50px;
@@ -47,10 +47,17 @@ a, a:visited, a:hover {
   height: 38px;
   top: 10px;
   bottom: 0;
+  overflow: hidden;
+  white-space: nowrap;
 }
 
 #main-bar span {
   font-weight: 700;
+  display: inline-block;
+}
+
+#main-bar input {
+  display: inline-block;
 }
 
 #templates {
