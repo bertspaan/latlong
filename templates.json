@@ -50,7 +50,7 @@
     {
       "name": "citysdk",
       "title": "CitySDK",
-      "template": ""
+      "template": "bbox=52.38901,4.79519,52.35191,5.01135"
     },
     {
       "name": "tilemill",
