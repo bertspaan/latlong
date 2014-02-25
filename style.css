@@ -69,12 +69,17 @@ a, a:visited, a:hover {
 }
 
 ul {
-  margin-left: 20px;
-  line-height: 1.4em;
+  margin-left: 5px;
+  margin-right: 10px;
+  line-height: 1.5em;
 }
 
 li {
+ list-style: none;
+}
 
+li:before {
+  content: '- '; /* long dash */
 }
 
 .hidden {

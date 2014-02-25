@@ -4,7 +4,7 @@
 	<title>Latitude/longitude of a point</title>
 	<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no'>
 	<link rel='stylesheet' href='style.css' />
-	<script src='d3.v3.min.js'></script>
+  <script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
   <link href='http://fonts.googleapis.com/css?family=Inconsolata:400,700' rel='stylesheet' type='text/css'>
   <link rel='stylesheet' href='http://cdn.leafletjs.com/leaflet-0.7.2/leaflet.css' />
   <script src='http://cdn.leafletjs.com/leaflet-0.7.2/leaflet.js'></script>
@@ -12,11 +12,11 @@
 </head>
 <body>
 	<div id='map'></div>
-  <div id='main-bar' class='bar'>
+  <div id='main-bar' class='bar leaflet-bar'>
     <span class='template'>Latitude, longitude</span>:
     <input type='text' id='latlng' name='latlng' />
   </div> 
-  <div id='templates' class='bar hidden'>
+  <div id='templates' class='bar leaflet-bar hidden'>
   </div> 
 	<script>
     // TODO: 
@@ -58,24 +58,23 @@
           .data(json.point)
           .enter()
         .append('li')
-          .classed('template', true)
           .classed('hidden', function(d, i) { return i == 0; })
+        .append('span')
+          .classed('template', true)
           .html(function(d) { return d.title; })
           .on('click', function(d) {
             d3.select('#templates').classed('hidden', true);
             t = d;
             d3.select('#main-bar span').html(t.title);
-            updateLatLng();            
-            
+            updateLatLng();
             d3.selectAll('#templates li').classed('hidden', false);
-            d3.select(this).classed('hidden', true);
+            d3.select(this.parentNode).classed('hidden', true);
           });
     });
     
     d3.select('#main-bar span').on('click', function() {
       d3.select('#templates').classed('hidden', !d3.select('#templates').classed('hidden'));
-    });
-    
+    });    
     
     function textWidth(text) {
       return text.length * 17.2 + 'px';
