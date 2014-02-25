@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
+  <meta charset="utf-8">
 	<title>Latitude/longitude of a point</title>
 	<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no'>
 	<link rel='stylesheet' href='style.css' />
@@ -39,7 +40,7 @@
     var tileUrl = 'http://otile2.mqcdn.com/tiles/1.0.0/map/{z}/{x}/{y}.png';
 
 		var tileLayer = L.tileLayer(tileUrl, {
-      attributionControl: false,
+      attribution: '<a href="https://github.com/bertspaan/latlong">Latlong by Bert Spaan</a> | Map © OpenStreetMap contributors',
 			minZoom: 2
 		}).addTo(map);
 

@@ -10,6 +10,6 @@ Easily find latitude and lotitude of a point!
 - Well-known text
 - PostGIS
 - GeoJSON
-- CitySDK
+- [CitySDK](http://dev.citysdk.waag.org)
 
-Add more by editing `templates.json`!
+Add more by editing [`templates.json`](https://github.com/bertspaan/latlong/blob/gh-pages/templates.json)!
