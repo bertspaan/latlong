@@ -47,32 +47,7 @@
     map.on('move', function() {
       updateLatLng();
     });
-    
-    d3.json('templates.json', function(json) {
-      //console.log(hash.getParameterValue('template'));
-      t = json.point[0];
-      
-      d3.select('#templates')
-        .append('ul')
-          .selectAll('li')
-          .data(json.point)
-          .enter()
-        .append('li')
-          .classed('hidden', function(d, i) { return i == 0; })
-        .append('span')
-          .classed('template', true)
-          .html(function(d) { return d.title; })
-          .on('click', function(d) {
-            d3.select('#templates').classed('hidden', true);
-            t = d;
-            d3.select('#main-bar span').html(t.title);
-            hash.setParameterValue('template', d.name == 'latlong' ? null : d.name);         
-            updateLatLng();
-            d3.selectAll('#templates li').classed('hidden', false);
-            d3.select(this.parentNode).classed('hidden', true);
-          });
-    });
-    
+        
     d3.select('#main-bar span').on('click', function() {
       d3.select('#templates').classed('hidden', !d3.select('#templates').classed('hidden'));
     });    
@@ -192,8 +167,44 @@
       }
       disableTextChange = false;
     }
+          
+    d3.json('templates.json', function(json) {
+      t = json.point[0];
+      var template = hash.getParameterValue('template');
+      if (template) {
+        for (var i = 0; i < json.point.length; i++) {
+          if (template === json.point[i].name) {
+            t = json.point[i];
+            d3.select('#main-bar span').html(t.title);
+            break;
+          }
+        }
+      }
       
-    updateLatLng();       
+      updateLatLng();
+      
+      d3.select('#templates')
+        .append('ul')
+          .selectAll('li')
+          .data(json.point)
+          .enter()
+        .append('li')
+          .classed('hidden', function(d, i) { return i == 0; })
+        .append('span')
+          .classed('template', true)
+          .html(function(d) { return d.title; })
+          .on('click', function(d) {
+            d3.select('#templates').classed('hidden', true);
+            t = d;
+            d3.select('#main-bar span').html(t.title);
+            hash.setParameterValue('template', d.name == 'latlong' ? null : d.name);
+            hash.onMapMove();
+            updateLatLng();
+            d3.selectAll('#templates li').classed('hidden', false);
+            d3.select(this.parentNode).classed('hidden', true);
+          });
+    });
+     
 	</script>
   <script>
     (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
