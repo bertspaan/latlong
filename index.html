@@ -76,6 +76,14 @@
       d3.select('#main-bar').classed('error', error);
     }
     
+    map.on('zoomstart', function() {
+      d3.select('#templates').classed('hidden', true);
+    });
+
+    map.on('movestart', function() {
+      d3.select('#templates').classed('hidden', true);
+    });
+
     map.on('moveend', function() {
       disableInputEvent = false;
     });
