@@ -22,9 +22,6 @@
 	<script>
     // TODO: 
     // remember template
-    // firefox: shadow on bar
-    // regex errors
-    // spaces in regex
   
 		var map = L.map('map'),
         t = {
@@ -36,6 +33,7 @@
         
     map.setView([52.3674, 4.915], 6);
     var hash = new L.Hash(map);
+    hash.addParameter('template');
     
     var tileUrl = 'http://otile2.mqcdn.com/tiles/1.0.0/map/{z}/{x}/{y}.png';
 
@@ -51,6 +49,7 @@
     });
     
     d3.json('templates.json', function(json) {
+      //console.log(hash.getParameterValue('template'));
       t = json.point[0];
       
       d3.select('#templates')
@@ -67,6 +66,7 @@
             d3.select('#templates').classed('hidden', true);
             t = d;
             d3.select('#main-bar span').html(t.title);
+            hash.setParameterValue('template', d.name == 'latlong' ? null : d.name);         
             updateLatLng();
             d3.selectAll('#templates li').classed('hidden', false);
             d3.select(this.parentNode).classed('hidden', true);
@@ -109,23 +109,24 @@
       var value = d3.select(this).property('value');
       d3.select(this).style('width', textWidth(value));
     
-      var reNum = '([-+]?[0-9]*\.?[0-9]+)';
+      var reNum = '\s*([-+]?[0-9]*\.?[0-9]*)\s*';
       var reTemplate = RegExp.escape(t.template).replace(/%.*?%/g, reNum);
-   
+         
       var value = d3.select('input').property('value');
       var match = value.match(reTemplate);
     
       // point, match must have length 3 
       var latlng;
       if (match && match.length == 3) {
-        var lat = validateLat(match[1]),
-            lng = validateLng(match[2]);  
+        var order = t.template.indexOf('%lat%') < t.template.indexOf('%lng%');
+        var lat = validateLat(order ? match[1] : match[2]),
+            lng = validateLng(order ? match[2] : match[1]);
         if (lat && lng) {
           latlng = L.latLng(lat, lng);
         }        
       }
     
-      if (latlng && value == t.template.replace('%lat%', latlng.lat).replace('%lng%', latlng.lng)) {
+      if (latlng /*&& value == t.template.replace('%lat%', latlng.lat).replace('%lng%', latlng.lng)*/) {
         disableTextChange = true;
         map.panTo(latlng, {animate: false});
         setError(false);

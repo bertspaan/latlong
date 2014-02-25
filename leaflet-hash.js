@@ -14,10 +14,20 @@
 	};
 
 	L.Hash.parseHash = function(hash) {
-		if(hash.indexOf('#') === 0) {
+	  if (hash.indexOf('#') === 0) {
 			hash = hash.substr(1);
 		}
-		var args = hash.split("/");
+    
+    var parts = hash.split("&");
+     
+    for (var i = 1; i < parts.length; i++) {
+      if (parts[i].indexOf("=") != -1) {
+        var param = parts[i].split("=");        
+        this.setParameterValue(param[0], param[1]);        
+      }       
+    }    
+    
+		var args = parts[0].split("/");
 		if (args.length == 3) {
 			var zoom = parseInt(args[0], 10),
 			lat = parseFloat(args[1]),
@@ -34,24 +44,36 @@
 			return false;
 		}
 	};
+  
+  L.Hash.parametersHash = function() {
+    var hash = ''        
+    for (var param in this.params) {
+      if (param && this.params[param]) {
+        hash += '&' + param + '=' + this.params[param];
+      }
+    }
+    return hash;
+  },    
 
-	L.Hash.formatHash = function(map) {
-		var center = map.getCenter(),
+	L.Hash.formatHash = function(map) {    
+    var center = map.getCenter(),
 		    zoom = map.getZoom(),
 		    precision = Math.max(0, Math.ceil(Math.log(zoom) / Math.LN2));
 
 		return "#" + [zoom,
 			center.lat.toFixed(precision),
 			center.lng.toFixed(precision)
-		].join("/");
+		].join("/") + this.parametersHash();
 	},
 
 	L.Hash.prototype = {
 		map: null,
 		lastHash: null,
+    params: {},
 
 		parseHash: L.Hash.parseHash,
 		formatHash: L.Hash.formatHash,
+		parametersHash: L.Hash.parametersHash,
 
 		init: function(map) {
 			this.map = map;
@@ -64,6 +86,21 @@
 				this.startListening();
 			}
 		},
+    
+    addParameter: function(param) {
+      this.params[param] = null;
+    },
+    
+    setParameterValue: function(param, value) {
+      if (!param in this.params) {
+        this.addParameter(param);
+      }
+      this.params[param] = value;
+    },
+    
+    getParameterValue: function(param) {
+      return this.params[param];
+    },
 
 		removeFrom: function(map) {
 			if (this.changeTimeout) {
