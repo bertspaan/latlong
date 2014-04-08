@@ -3,7 +3,7 @@
     {
       "name": "latlong",
       "title": "Latitude, longitude",
-      "template": "%lat%, %lng%"
+      "template": "%lat%,%lng%"
     },
     {
       "name": "wkt",
