@@ -19,13 +19,8 @@
       "name": "geojson",
       "title": "GeoJSON",
       "template": "{\"type\":\"Point\",\"coordinates\":[%lng%,%lat%]}"
-    },
-    {
-      "name": "citysdk",
-      "title": "CitySDK",
-      "template": "&lat=%lat%&lon=%lng%"
     }
-  ], 
+  ],
   "rect": [
     {
       "name": "latlngg",
@@ -56,6 +51,6 @@
       "name": "tilemill",
       "title": "TileMill",
       "template": ""
-    }  
+    }
   ]
 }

@@ -16,13 +16,13 @@
   <div id='main-bar' class='bar leaflet-bar'>
     <span class='template'>Latitude, longitude</span>:
     <input type='text' id='latlng' name='latlng' />
-  </div> 
+  </div>
   <div id='templates' class='bar leaflet-bar hidden'>
-  </div> 
+  </div>
 	<script>
-    // TODO: 
+    // TODO:
     // remember template
-  
+
 		var map = L.map('map'),
         t = {
           "name": "latlong",
@@ -30,32 +30,33 @@
           "template": "%lat%, %lng%"
         },
         disableTextChange = false;
-        
+
     map.setView([52.3674, 4.915], 6);
     var hash = new L.Hash(map);
     hash.addParameter('template');
-    
-    var tileUrl = 'http://otile2.mqcdn.com/tiles/1.0.0/map/{z}/{x}/{y}.png';
+
+    var tileUrl = 'http://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png';
+    var attribution = '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, &copy; <a href="https://carto.com/attributions">CARTO</a>';
 
 		var tileLayer = L.tileLayer(tileUrl, {
-      attribution: '<a href="https://github.com/bertspaan/latlong">Latlong by Bert Spaan</a> | Map © OpenStreetMap contributors',
+      attribution: attribution,
 			minZoom: 2
 		}).addTo(map);
 
     drawCrossHair();
-    
+
     map.on('move', function() {
       updateLatLng();
     });
-        
+
     d3.select('#main-bar span').on('click', function() {
       d3.select('#templates').classed('hidden', !d3.select('#templates').classed('hidden'));
-    });    
-    
+    });
+
     function textWidth(text) {
       return text.length * 17.2 + 'px';
     }
-    
+
     function validateLat(lat) {
       if (lat >= -90 && lat <= 90) {
         return lat;
@@ -63,7 +64,7 @@
         return null;
       }
     }
-    
+
     function validateLng(lng) {
       if (lng >= -180 && lng <= 180) {
         return lng;
@@ -71,11 +72,11 @@
         return null;
       }
     }
-    
+
     function setError(error) {
       d3.select('#main-bar').classed('error', error);
     }
-    
+
     map.on('zoomstart', function() {
       d3.select('#templates').classed('hidden', true);
     });
@@ -87,18 +88,18 @@
     map.on('moveend', function() {
       disableInputEvent = false;
     });
-    
+
     d3.select('input').on('input', function() {
       var value = d3.select(this).property('value');
       d3.select(this).style('width', textWidth(value));
-    
+
       var reNum = '\s*([-+]?[0-9]*\.?[0-9]*)\s*';
       var reTemplate = RegExp.escape(t.template).replace(/%.*?%/g, reNum);
-         
+
       var value = d3.select('input').property('value');
       var match = value.match(reTemplate);
-    
-      // point, match must have length 3 
+
+      // point, match must have length 3
       var latlng;
       if (match && match.length == 3) {
         var order = t.template.indexOf('%lat%') < t.template.indexOf('%lng%');
@@ -106,9 +107,9 @@
             lng = validateLng(order ? match[2] : match[1]);
         if (lat && lng) {
           latlng = L.latLng(lat, lng);
-        }        
+        }
       }
-    
+
       if (latlng /*&& value == t.template.replace('%lat%', latlng.lat).replace('%lng%', latlng.lng)*/) {
         disableTextChange = true;
         map.panTo(latlng, {animate: false});
@@ -117,18 +118,18 @@
         setError(true);
       }
     });
-    
+
     // From http://stackoverflow.com/questions/3115150/how-to-escape-regular-expression-special-characters-using-javascript
     RegExp.escape = function(text) {
       return text.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&');
     };
-    
+
     function drawCrossHair() {
       var crosshairLength = 10,
           crosshair = [
         [0, -1], [1, 0], [0, 1], [-1, 0]
       ];
-      
+
       var g = d3.select('.leaflet-control-container')
         .append('div')
           .attr('class', 'leaflet-middle')
@@ -140,31 +141,31 @@
           .attr('transform', 'translate(32,32)')
           .selectAll('line')
           .data(crosshair);
-      
+
       g.enter().append('line')
           .attr('class', 'crosshair-outline')
           .attr('x1', function(d) { return d[0] * crosshairLength; })
           .attr('y1', function(d) { return d[1] * crosshairLength; })
           .attr('x2', function(d) { return d[0] * crosshairLength * 2; })
           .attr('y2', function(d) { return d[1] * crosshairLength * 2; });
-        
+
       g.enter().append('line')
           .attr('x1', function(d) { return d[0] * crosshairLength; })
           .attr('y1', function(d) { return d[1] * crosshairLength; })
           .attr('x2', function(d) { return d[0] * crosshairLength * 2; })
           .attr('y2', function(d) { return d[1] * crosshairLength * 2; });
     }
-    
+
     function templateToLatLng() {
   		var center = map.getCenter(),
   		    zoom = map.getZoom(),
 	        precision = Math.max(0, Math.ceil(Math.log(zoom) / Math.LN2));
-      
-      return t.template 
+
+      return t.template
           .replace('%lat%', center.lat.toFixed(precision))
           .replace('%lng%', ((center.lng + 180) % 360 - 180).toFixed(precision));
     }
-           
+
     function updateLatLng() {
       setError(false);
       if (!disableTextChange) {
@@ -175,7 +176,7 @@
       }
       disableTextChange = false;
     }
-          
+
     d3.json('templates.json', function(json) {
       t = json.point[0];
       var template = hash.getParameterValue('template');
@@ -188,9 +189,9 @@
           }
         }
       }
-      
+
       updateLatLng();
-      
+
       d3.select('#templates')
         .append('ul')
           .selectAll('li')
@@ -212,7 +213,7 @@
             d3.select(this.parentNode).classed('hidden', true);
           });
     });
-     
+
 	</script>
   <script>
     (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
