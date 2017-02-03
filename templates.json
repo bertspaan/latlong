@@ -6,6 +6,11 @@
       "template": "%lat%,%lng%"
     },
     {
+      "name": "longlat",
+      "title": "Longitude, latitude",
+      "template": "%lng%,%lat%"
+    },
+    {
       "name": "wkt",
       "title": "Well-known text",
       "template": "POINT(%lng% %lat%)"
@@ -24,7 +29,7 @@
   "rect": [
     {
       "name": "latlngg",
-      "title": "latitude, lnggitude",
+      "title": "latitude, longitude",
       "template": "%latnw%, %lngnw%, %latse%, %lngse%"
     },
     {
