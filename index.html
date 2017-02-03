@@ -10,6 +10,10 @@
   <link rel='stylesheet' href='http://cdn.leafletjs.com/leaflet-0.7.2/leaflet.css' />
   <script src='http://cdn.leafletjs.com/leaflet-0.7.2/leaflet.js'></script>
   <script src='leaflet-hash.js'></script>
+  <link rel="stylesheet" href="https://domoritz.github.io/leaflet-locatecontrol/dist/L.Control.Locate.min.css" />
+  <script src="https://domoritz.github.io/leaflet-locatecontrol/dist/L.Control.Locate.min.js" charset="utf-8"></script>
+  <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">
+
 </head>
 <body>
 	<div id='map'></div>
@@ -34,6 +38,10 @@
     map.setView([52.3674, 4.915], 6);
     var hash = new L.Hash(map);
     hash.addParameter('template');
+
+    L.control.locate({
+      drawCircle: false
+    }).addTo(map);
 
     var tileUrl = 'http://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png';
     var attribution = '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, &copy; <a href="https://carto.com/attributions">CARTO</a>';
