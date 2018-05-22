@@ -28,7 +28,7 @@
   ],
   "rect": [
     {
-      "name": "latlngg",
+      "name": "latlng",
       "title": "latitude, longitude",
       "template": "%latnw%, %lngnw%, %latse%, %lngse%"
     },
