@@ -1,6 +1,6 @@
 # Latlong
 
-Easily find latitude and lotitude of a point!
+Easily find the latitude and longitude of a point!
 
 [![](screenshots/latlong.png)](https://bertspaan.nl/latlong)
 
