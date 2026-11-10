@@ -1,4 +1,4 @@
-import { type Bbox, type Geometry, type Mode, type Point, getTemplate, normalizeBbox } from './templates';
+import { type Bbox, type Geometry, type Mode, type Point, defaultTemplates, getTemplate, normalizeBbox } from './templates';
 import { clampViewportBboxSize, defaultViewportBboxSize, type ViewportBboxSize } from './viewport-bbox';
 
 export type HashState = {
@@ -49,8 +49,9 @@ export function parseHash(hash: string): HashState {
   const lat = parseNumber(latValue) ?? defaultHashState.center.lat;
   const lng = parseNumber(lngValue) ?? defaultHashState.center.lng;
   const mode = params.get('mode') === 'bbox' ? 'bbox' : 'point';
-  const pointTemplate = getTemplate('point', params.get('template')).name;
-  const bboxTemplate = getTemplate('bbox', params.get('bboxTemplate')).name;
+  const template = params.get('template');
+  const pointTemplate = getTemplate('point', mode === 'point' ? template : null).name;
+  const bboxTemplate = getTemplate('bbox', mode === 'bbox' ? template : null).name;
   const viewportValues = params.get('viewport')?.split(',') ?? [];
   const width = parseNumber(viewportValues[0]);
   const height = parseNumber(viewportValues[1]);
@@ -92,12 +93,9 @@ export function formatHash(state: HashState): string {
     params.set('mode', 'bbox');
   }
 
-  if (state.pointTemplate !== 'latlong') {
-    params.set('template', state.pointTemplate);
-  }
-
-  if (state.bboxTemplate !== 'bbox') {
-    params.set('bboxTemplate', state.bboxTemplate);
+  const template = state.mode === 'bbox' ? state.bboxTemplate : state.pointTemplate;
+  if (template !== defaultTemplates[state.mode].name) {
+    params.set('template', template);
   }
 
   if (state.bbox) {
